@@ -7,10 +7,11 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install jq --yes && apt-get autoremove --yes
 
-COPY ./app .
+COPY ./solution/app .
+COPY ./solution/.taq .taq
+
 RUN yarn install
 
-COPY ./.taq .taq
 RUN if test -f .env;\
       then sed -i "s/\(REACT_APP_CONTRACT_ADDRESS *= *\).*/\1$(jq -r 'last(.tasks[]).output[0].address' ./.taq/testing-state.json)/" .env ; \
       else jq -r '"REACT_APP_CONTRACT_ADDRESS=" + last(.tasks[]).output[0].address' ./.taq/testing-state.json > .env ; fi
