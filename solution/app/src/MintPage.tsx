@@ -136,11 +136,6 @@ export default function MintPage() {
         flex: 1,
         py: 6,
         px: 4,
-        bgcolor: "#eaeff1",
-        backgroundImage:
-          "url(https://en.vinex.market/skin/default/images/banners/home/new/banner-1180.jpg)",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
       }}
     >
       <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
@@ -247,7 +242,7 @@ export default function MintPage() {
                   )}
                 />
                 <CardContent>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography color="text.secondary">
                     {item.description}
                   </Typography>
                 </CardContent>

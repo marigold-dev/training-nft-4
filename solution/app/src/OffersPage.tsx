@@ -167,11 +167,6 @@ export default function OffersPage() {
         flex: 1,
         py: 6,
         px: 4,
-        bgcolor: "#eaeff1",
-        backgroundImage:
-          "url(https://en.vinex.market/skin/default/images/banners/home/new/banner-1180.jpg)",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
       }}
     >
       <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
@@ -237,8 +232,12 @@ export default function OffersPage() {
                     error={formik.touched.price && Boolean(formik.errors.price)}
                     helperText={formik.touched.price && formik.errors.price}
                   />
-                  <Button type="submit" aria-label="add to favorites">
-                    <SellIcon /> SELL
+                  <Button
+                    variant="contained"
+                    type="submit"
+                    aria-label="add to favorites"
+                  >
+                    <SellIcon /> Sell
                   </Button>
                 </form>
               </CardActions>
