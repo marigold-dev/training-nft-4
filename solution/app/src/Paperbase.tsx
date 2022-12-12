@@ -155,10 +155,24 @@ theme = {
         },
       },
     },
+    MuiListItemIcon: {
+      styleOverrides: {
+        root: {
+          color: theme.palette.primary.main,
+        },
+      },
+    },
     MuiCardHeader: {
       styleOverrides: {
         root: {
           height: "4em",
+        },
+      },
+    },
+    MuiSvgIcon: {
+      styleOverrides: {
+        root: {
+          height: "auto",
         },
       },
     },

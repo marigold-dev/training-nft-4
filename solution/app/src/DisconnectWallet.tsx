@@ -34,7 +34,7 @@ const DisconnectButton = ({
       <Tooltip title={userBalance / 1000000 + " Tz"}>
         <Button disableRipple>{userAddress}</Button>
       </Tooltip>
-      <Button>
+      <Button sx={{ p: 1 }}>
         <Logout onClick={disconnectWallet} />
       </Button>
     </ButtonGroup>
