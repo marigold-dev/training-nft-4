@@ -1,5 +1,6 @@
 import {
   AddCircleOutlined,
+  Close,
   KeyboardArrowLeft,
   KeyboardArrowRight,
 } from "@mui/icons-material";
@@ -142,6 +143,7 @@ export default function MintPage() {
         await op.confirmation(2);
 
         enqueueSnackbar("Wine collection minted", { variant: "success" });
+        setFormOpen(false);
 
         refreshUserContextOnPageReload(); //force all app to refresh the context
       }
@@ -202,36 +204,61 @@ export default function MintPage() {
             borderColor: "text.secondary",
             borderStyle: "solid",
             borderWidth: "1px",
-            paddingTop: 5,
+
             height: "calc(100vh - 64px)",
           }}
         >
+          <Button
+            sx={{
+              position: "absolute",
+              right: "0",
+              display: !formOpen ? "none" : "block",
+            }}
+            onClick={toggleDrawer(!formOpen)}
+          >
+            <Close />
+          </Button>
           <form onSubmit={formik.handleSubmit}>
             <Stack spacing={2} margin={2} alignContent={"center"}>
+              <Typography variant="h5">Mint a new collection</Typography>
+
+              <TextField
+                id="standard-basic"
+                name="token_id"
+                label="token_id"
+                value={formik.values.token_id}
+                disabled
+                variant="filled"
+              />
               <TextField
                 id="standard-basic"
                 name="name"
                 label="name"
+                required
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
-                variant="standard"
+                variant="filled"
               />
               <TextField
                 id="standard-basic"
                 name="symbol"
                 label="symbol"
+                required
                 value={formik.values.symbol}
                 onChange={formik.handleChange}
                 error={formik.touched.symbol && Boolean(formik.errors.symbol)}
                 helperText={formik.touched.symbol && formik.errors.symbol}
-                variant="standard"
+                variant="filled"
               />
               <TextField
                 id="standard-basic"
                 name="description"
                 label="description"
+                required
+                multiline
+                minRows={2}
                 value={formik.values.description}
                 onChange={formik.handleChange}
                 error={
@@ -241,24 +268,28 @@ export default function MintPage() {
                 helperText={
                   formik.touched.description && formik.errors.description
                 }
-                variant="standard"
+                variant="filled"
               />
 
               <TextField
                 id="standard-basic"
                 name="quantity"
                 label="quantity"
+                required
                 value={formik.values.quantity}
                 onChange={formik.handleChange}
                 error={
                   formik.touched.quantity && Boolean(formik.errors.quantity)
                 }
                 helperText={formik.touched.quantity && formik.errors.quantity}
-                variant="standard"
-                type={"number"}
+                variant="filled"
               />
 
-              <img src={pictureUrl} />
+              {pictureUrl ? (
+                <img height={100} width={100} src={pictureUrl} />
+              ) : (
+                ""
+              )}
               <Button variant="contained" component="label" color="primary">
                 <AddCircleOutlined />
                 Upload an image
@@ -275,15 +306,7 @@ export default function MintPage() {
                   }}
                 />
               </Button>
-              <TextField
-                id="standard-basic"
-                name="token_id"
-                label="token_id"
-                value={formik.values.token_id}
-                disabled
-                variant="standard"
-                type={"number"}
-              />
+
               <Button variant="contained" type="submit">
                 Mint
               </Button>

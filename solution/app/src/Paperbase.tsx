@@ -83,6 +83,31 @@ theme = {
         input: {
           padding: 0,
           color: theme.palette.text.secondary,
+          "&.Mui-disabled": {
+            color: theme.palette.secondary.main,
+            WebkitTextFillColor: theme.palette.secondary.main,
+          },
+        },
+      },
+    },
+    MuiFilledInput: {
+      styleOverrides: {
+        input: {
+          color: theme.palette.text.secondary,
+          "&.Mui-disabled": {
+            color: theme.palette.secondary.main,
+            WebkitTextFillColor: theme.palette.secondary.main,
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          "&.Mui-disabled": {
+            color: theme.palette.secondary.main,
+            WebkitTextFillColor: theme.palette.secondary.main,
+          },
         },
       },
     },
@@ -160,6 +185,7 @@ theme = {
         },
       },
     },
+
     MuiSvgIcon: {
       styleOverrides: {
         root: {
@@ -228,13 +254,11 @@ export default function Paperbase() {
                   }}
                 />
 
-                <Box
-                  component="main"
-                  sx={{ maxWidth: "calc(100vw - " + drawerWidth + "px)" }}
-                >
+                <Box component="main">
                   <Toolbar />
                   <Box
                     sx={{
+                      width: "calc(100vw - " + drawerWidth + "px)",
                       borderColor: "text.secondary",
                       borderStyle: "solid",
                       borderWidth: "1px",
