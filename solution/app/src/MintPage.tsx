@@ -1,27 +1,38 @@
 import {
-  Avatar,
+  AddCircleOutlined,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from "@mui/icons-material";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import {
+  Box,
   Button,
   CardHeader,
   CardMedia,
+  MobileStepper,
   Stack,
+  SwipeableDrawer,
   TextField,
+  Toolbar,
 } from "@mui/material";
-import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
 import React, { Fragment, useEffect, useState } from "react";
+import SwipeableViews from "react-swipeable-views";
+import { autoPlay } from "react-swipeable-views-utils";
+import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
-
-import { AddCircleOutlined } from "@mui/icons-material";
-import { char2Bytes } from "@taquito/utils";
-import { useFormik } from "formik";
-import * as yup from "yup";
 import { bytes, nat } from "./type-aliases";
+
+const AutoPlaySwipeableViews = autoPlay(SwipeableViews);
+
 export default function MintPage() {
   const {
     nftContrat,
@@ -32,6 +43,22 @@ export default function MintPage() {
   const { enqueueSnackbar } = useSnackbar();
   const [pictureUrl, setPictureUrl] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
+
+  const [activeStep, setActiveStep] = React.useState(0);
+
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
+  const handleStepChange = (step: number) => {
+    console.log("handleStepChange", step);
+
+    setActiveStep(step);
+  };
 
   const validationSchema = yup.object({
     name: yup.string().required("Name is required"),
@@ -129,130 +156,218 @@ export default function MintPage() {
     }
   };
 
+  const [formOpen, setFormOpen] = useState<boolean>(true);
+
+  const toggleDrawer =
+    (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === "keydown" &&
+        ((event as React.KeyboardEvent).key === "Tab" ||
+          (event as React.KeyboardEvent).key === "Shift")
+      ) {
+        return;
+      }
+      setFormOpen(open);
+    };
+
   return (
-    <Box
-      component="main"
-      sx={{
-        flex: 1,
-        py: 6,
-        px: 4,
-      }}
-    >
-      <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
-        <form onSubmit={formik.handleSubmit}>
-          <Stack spacing={2} margin={2} alignContent={"center"}>
-            <h1>Mint your wine collection</h1>
-            <TextField
-              id="standard-basic"
-              name="name"
-              label="name"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
-              variant="standard"
-            />
-            <TextField
-              id="standard-basic"
-              name="symbol"
-              label="symbol"
-              value={formik.values.symbol}
-              onChange={formik.handleChange}
-              error={formik.touched.symbol && Boolean(formik.errors.symbol)}
-              helperText={formik.touched.symbol && formik.errors.symbol}
-              variant="standard"
-            />
-            <TextField
-              id="standard-basic"
-              name="description"
-              label="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              error={
-                formik.touched.description && Boolean(formik.errors.description)
-              }
-              helperText={
-                formik.touched.description && formik.errors.description
-              }
-              variant="standard"
-            />
+    <Paper>
+      <Button
+        sx={{
+          position: "absolute",
+          right: "-3em",
+          maringBottom: "40px",
+          top: "50vh",
+          transform: "rotate(270deg)",
+          zIndex: "10000",
+          display: formOpen ? "none" : "block",
+        }}
+        onClick={toggleDrawer(!formOpen)}
+      >
+        <UnfoldMoreIcon />
+        {" Mint Form "} <UnfoldMoreIcon />
+      </Button>
 
-            <TextField
-              id="standard-basic"
-              name="quantity"
-              label="quantity"
-              value={formik.values.quantity}
-              onChange={formik.handleChange}
-              error={formik.touched.quantity && Boolean(formik.errors.quantity)}
-              helperText={formik.touched.quantity && formik.errors.quantity}
-              variant="standard"
-              type={"number"}
-            />
-
-            <img src={pictureUrl} />
-            <Button variant="contained" component="label" color="primary">
-              <AddCircleOutlined />
-              Upload an image
-              <input
-                type="file"
-                hidden
-                name="data"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const data = e.target.files ? e.target.files[0] : null;
-                  if (data) {
-                    setFile(data);
-                  }
-                  e.preventDefault();
-                }}
+      <SwipeableDrawer
+        onClose={toggleDrawer(false)}
+        onOpen={toggleDrawer(true)}
+        anchor="right"
+        open={formOpen}
+        variant="temporary"
+      >
+        <Toolbar />
+        <Box
+          sx={{
+            width: "40vw",
+            borderColor: "text.secondary",
+            borderStyle: "solid",
+            borderWidth: "1px",
+            paddingTop: 5,
+            height: "calc(100vh - 64px)",
+          }}
+        >
+          <form onSubmit={formik.handleSubmit}>
+            <Stack spacing={2} margin={2} alignContent={"center"}>
+              <TextField
+                id="standard-basic"
+                name="name"
+                label="name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+                variant="standard"
               />
-            </Button>
-            <TextField
-              id="standard-basic"
-              name="token_id"
-              label="token_id"
-              value={formik.values.token_id}
-              disabled
-              variant="standard"
-              type={"number"}
-            />
-            <Button variant="contained" type="submit">
-              Mint
-            </Button>
-          </Stack>
-        </form>
-        {nftContratTokenMetadataMap.size != 0 ? (
-          Array.from(nftContratTokenMetadataMap!.entries()).map(
-            ([token_id, item]) => (
-              <Card key={token_id.toString()}>
-                <CardHeader
-                  avatar={
-                    <Avatar sx={{ bgcolor: "purple" }} aria-label="recipe">
-                      {token_id}
-                    </Avatar>
-                  }
-                  title={item.name}
-                  subheader={item.symbol}
+              <TextField
+                id="standard-basic"
+                name="symbol"
+                label="symbol"
+                value={formik.values.symbol}
+                onChange={formik.handleChange}
+                error={formik.touched.symbol && Boolean(formik.errors.symbol)}
+                helperText={formik.touched.symbol && formik.errors.symbol}
+                variant="standard"
+              />
+              <TextField
+                id="standard-basic"
+                name="description"
+                label="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.description &&
+                  Boolean(formik.errors.description)
+                }
+                helperText={
+                  formik.touched.description && formik.errors.description
+                }
+                variant="standard"
+              />
+
+              <TextField
+                id="standard-basic"
+                name="quantity"
+                label="quantity"
+                value={formik.values.quantity}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.quantity && Boolean(formik.errors.quantity)
+                }
+                helperText={formik.touched.quantity && formik.errors.quantity}
+                variant="standard"
+                type={"number"}
+              />
+
+              <img src={pictureUrl} />
+              <Button variant="contained" component="label" color="primary">
+                <AddCircleOutlined />
+                Upload an image
+                <input
+                  type="file"
+                  hidden
+                  name="data"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const data = e.target.files ? e.target.files[0] : null;
+                    if (data) {
+                      setFile(data);
+                    }
+                    e.preventDefault();
+                  }}
                 />
-                <CardMedia
-                  component="img"
-                  height="194"
-                  image={item.thumbnailUri?.replace(
-                    "ipfs://",
-                    "https://gateway.pinata.cloud/ipfs/"
-                  )}
-                />
-                <CardContent>
-                  <Typography color="text.secondary">
-                    {item.description}
-                  </Typography>
-                </CardContent>
-              </Card>
-            )
-          )
-        ) : (
-          <Fragment />
-        )}
-      </Paper>
-    </Box>
+              </Button>
+              <TextField
+                id="standard-basic"
+                name="token_id"
+                label="token_id"
+                value={formik.values.token_id}
+                disabled
+                variant="standard"
+                type={"number"}
+              />
+              <Button variant="contained" type="submit">
+                Mint
+              </Button>
+            </Stack>
+          </form>
+        </Box>
+      </SwipeableDrawer>
+
+      <Typography variant="h5">Mint your wine collection</Typography>
+
+      {nftContratTokenMetadataMap.size != 0 ? (
+        <Box>
+          <AutoPlaySwipeableViews
+            axis="x"
+            index={activeStep}
+            onChangeIndex={handleStepChange}
+            enableMouseEvents
+          >
+            {Array.from(nftContratTokenMetadataMap!.entries()).map(
+              ([token_id, token]) => (
+                <Card
+                  sx={{
+                    display: "block",
+                    maxWidth: "80vw",
+                    overflow: "hidden",
+                  }}
+                  key={token_id.toString()}
+                >
+                  <CardHeader title={token.name} />
+
+                  <CardMedia
+                    sx={{ width: "auto", marginLeft: "33%", maxHeight: "50vh" }}
+                    component="img"
+                    image={token.thumbnailUri?.replace(
+                      "ipfs://",
+                      "https://gateway.pinata.cloud/ipfs/"
+                    )}
+                  />
+
+                  <CardContent>
+                    <Box>
+                      <Typography>{"ID : " + token_id}</Typography>
+                      <Typography>
+                        {"Description : " + token.description}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              )
+            )}
+          </AutoPlaySwipeableViews>
+          <MobileStepper
+            variant="text"
+            steps={Array.from(nftContratTokenMetadataMap!.entries()).length}
+            position="static"
+            activeStep={activeStep}
+            nextButton={
+              <Button
+                size="small"
+                onClick={handleNext}
+                disabled={
+                  activeStep ===
+                  Array.from(nftContratTokenMetadataMap!.entries()).length - 1
+                }
+              >
+                Next
+                <KeyboardArrowRight />
+              </Button>
+            }
+            backButton={
+              <Button
+                size="small"
+                onClick={handleBack}
+                disabled={activeStep === 0}
+              >
+                <KeyboardArrowLeft />
+                Back
+              </Button>
+            }
+          />
+        </Box>
+      ) : (
+        <Fragment />
+      )}
+    </Paper>
   );
 }

@@ -228,7 +228,10 @@ export default function Paperbase() {
                   }}
                 />
 
-                <Box component="main" sx={{ flexGrow: 1 }}>
+                <Box
+                  component="main"
+                  sx={{ maxWidth: "calc(100vw - " + drawerWidth + "px)" }}
+                >
                   <Toolbar />
                   <Box
                     sx={{
