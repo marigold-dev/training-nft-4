@@ -92,12 +92,9 @@ theme = {
           textTransform: "none",
           backgroundColor: theme.palette.secondary.main,
           color: theme.palette.primary.main,
-          borderRadius: "0",
           padding: 0,
-        },
-        contained: {
           boxShadow: "none",
-          borderRadius: "none",
+          borderRadius: "0",
           "&:active": {
             boxShadow: "none",
           },
@@ -109,13 +106,7 @@ theme = {
         },
       },
     },
-    MuiInput: {
-      styleOverrides: {
-        input: {
-          textAlign: "right",
-        },
-      },
-    },
+
     MuiFormLabel: {
       styleOverrides: {
         root: {
@@ -244,7 +235,7 @@ export default function Paperbase() {
                       borderColor: "text.secondary",
                       borderStyle: "solid",
                       borderWidth: "1px",
-                      p: 8,
+                      p: 6,
                       height: "calc(100vh - 64px)",
                     }}
                   >

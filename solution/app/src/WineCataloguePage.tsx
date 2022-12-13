@@ -204,8 +204,9 @@ export default function WineCataloguePage() {
                           sx={{ bottom: 0, position: "relative" }}
                           fullWidth
                           name="quantity"
+                          label="quantity"
                           placeholder="Enter a quantity"
-                          variant="standard"
+                          variant="filled"
                           value={formik.values.quantity}
                           onChange={formik.handleChange}
                           error={

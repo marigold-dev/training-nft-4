@@ -120,7 +120,7 @@ export default function Navigator(props: DrawerProps) {
           borderColor: "text.secondary",
           borderStyle: "solid",
           borderWidth: "1px",
-          paddingTop: 7,
+          paddingTop: 5,
           height: "calc(100vh - 64px)",
         }}
       >
