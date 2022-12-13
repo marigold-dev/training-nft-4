@@ -349,6 +349,7 @@ export default function MintPage() {
                   <CardContent>
                     <Box>
                       <Typography>{"ID : " + token_id}</Typography>
+                      <Typography>{"Symbol : " + token.symbol}</Typography>
                       <Typography>
                         {"Description : " + token.description}
                       </Typography>
