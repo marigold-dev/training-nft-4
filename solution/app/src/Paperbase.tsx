@@ -258,12 +258,14 @@ export default function Paperbase() {
                   <Toolbar />
                   <Box
                     sx={{
-                      width: "calc(100vw - " + drawerWidth + "px)",
+                      minWidth: "calc(100vw - " + drawerWidth + "px)",
                       borderColor: "text.secondary",
                       borderStyle: "solid",
                       borderWidth: "1px",
                       p: 6,
-                      height: "calc(100vh - 64px)",
+                      minHeight: "calc(100vh - 64px)",
+                      justifyContent: "center",
+                      display: "flex",
                     }}
                   >
                     <Outlet />

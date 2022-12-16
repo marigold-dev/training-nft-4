@@ -2,7 +2,7 @@ import {
   AddCircleOutlined,
   Close,
   KeyboardArrowLeft,
-  KeyboardArrowRight,
+  KeyboardArrowRight
 } from "@mui/icons-material";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import {
@@ -15,6 +15,7 @@ import {
   SwipeableDrawer,
   TextField,
   Toolbar,
+  useMediaQuery
 } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -58,7 +59,6 @@ export default function MintPage() {
   const handleStepChange = (step: number) => {
     console.log("handleStepChange", step);
 
-    setActiveStep(step);
   };
 
   const validationSchema = yup.object({
@@ -172,6 +172,8 @@ export default function MintPage() {
       setFormOpen(open);
     };
 
+    const isTablet = useMediaQuery("(min-width:600px)");
+
   return (
     <Paper>
       <Button
@@ -197,10 +199,10 @@ export default function MintPage() {
         open={formOpen}
         variant="temporary"
       >
-        <Toolbar />
+        <Toolbar sx={isTablet? {marginTop:"0", marginRight:"0"}:{marginTop:"35px", marginRight:"125px"} } />
         <Box
           sx={{
-            width: "40vw",
+            width: isTablet? "40vw": "60vw",
             borderColor: "text.secondary",
             borderStyle: "solid",
             borderWidth: "1px",
@@ -219,7 +221,7 @@ export default function MintPage() {
             <Close />
           </Button>
           <form onSubmit={formik.handleSubmit}>
-            <Stack spacing={2} margin={2} alignContent={"center"}>
+            <Stack  spacing={2} margin={2} alignContent={"center"}>
               <Typography variant="h5">Mint a new collection</Typography>
 
               <TextField
@@ -318,7 +320,7 @@ export default function MintPage() {
       <Typography variant="h5">Mint your wine collection</Typography>
 
       {nftContratTokenMetadataMap.size != 0 ? (
-        <Box>
+        <Box sx={{width:"70vw"}}>
           <AutoPlaySwipeableViews
             axis="x"
             index={activeStep}
@@ -335,10 +337,10 @@ export default function MintPage() {
                   }}
                   key={token_id.toString()}
                 >
-                  <CardHeader title={token.name} />
+                  <CardHeader  titleTypographyProps={isTablet?{fontSize:"1.5em" }: {fontSize:"1em"}}title={token.name} />
 
                   <CardMedia
-                    sx={{ width: "auto", marginLeft: "33%", maxHeight: "50vh" }}
+                    sx={isTablet? {width: "auto", marginLeft: "33%", maxHeight: "50vh"} : {width: "100%" ,maxHeight: "40vh"}}
                     component="img"
                     image={token.thumbnailUri?.replace(
                       "ipfs://",

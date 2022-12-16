@@ -30,17 +30,17 @@ export default function Header(props: HeaderProps) {
     <AppBar
       component="nav"
       position="fixed"
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      sx={{ paddingTop:"5px", zIndex: (theme) => theme.zIndex.drawer + 1 }}
     >
-      <Toolbar>
+      <Toolbar >
         <Grid container spacing={1} alignItems="center">
           <Grid item>
-            <img src="logo.png" />
+            <img style={{ width: 15, height: 25, }} src="logo.png" />
           </Grid>
           <Grid item>
             <Typography variant="h5">NFT Wine Factory</Typography>
           </Grid>
-          <Grid sx={{ display: { sm: "none", xs: "block" } }} item>
+          <Grid sx={{ paddingTop:"12px", paddingLeft:"13px", marginLeft:"30px", display: { sm: "none", xs: "block" } }} item >
             <IconButton
               color="inherit"
               aria-label="open drawer"

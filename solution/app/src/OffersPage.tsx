@@ -15,9 +15,9 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
-import { Stack } from "@mui/system";
 import BigNumber from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
@@ -176,13 +176,25 @@ export default function OffersPage() {
     }
   };
 
+  const isDesktop = useMediaQuery("(min-width:1100px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
+
   return (
     <Paper>
-      <Typography variant="h5">Sell my bottles</Typography>
-
+      <Typography style ={{paddingBottom:"10px"}} variant="h5">Sell my bottles</Typography>
       {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
         <Fragment>
-          <ImageList cols={itemPerPage / 2}>
+           <Pagination
+              page={currentPageIndex}
+              onChange={(_, value) => setCurrentPageIndex(value)}
+              count={Math.ceil(
+                Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
+              )}
+              showFirstButton
+              showLastButton
+            />
+
+          <ImageList cols={isDesktop? itemPerPage / 2 : isTablet? itemPerPage / 3 : 1}>
             {Array.from(ledgerTokenIDMap.entries())
               .filter((_, index) =>
                 index >= currentPageIndex * itemPerPage - itemPerPage &&
@@ -269,6 +281,7 @@ export default function OffersPage() {
                       >
                         <span>
                           <TextField
+                            type={"number"}
                             sx={{ width: "40%" }}
                             name="price"
                             label="price/bottle"
@@ -290,6 +303,7 @@ export default function OffersPage() {
                               bottom: 0,
                               position: "relative",
                             }}
+                            type="number"
                             label="quantity"
                             name="quantity"
                             placeholder="Enter a quantity"
@@ -304,6 +318,7 @@ export default function OffersPage() {
                               formik.touched.quantity && formik.errors.quantity
                             }
                             InputProps={{
+                              inputProps: { min: 0, max: balance.toNumber() } ,
                               endAdornment: (
                                 <InputAdornment position="end">
                                   <Button
@@ -323,17 +338,6 @@ export default function OffersPage() {
                 </Card>
               ))}{" "}
           </ImageList>
-          <Stack marginLeft="33%" bottom="2vh" position="absolute" spacing={2}>
-            <Pagination
-              page={currentPageIndex}
-              onChange={(_, value) => setCurrentPageIndex(value)}
-              count={Math.ceil(
-                Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
-              )}
-              showFirstButton
-              showLastButton
-            />
-          </Stack>
         </Fragment>
       ) : (
         <Fragment />

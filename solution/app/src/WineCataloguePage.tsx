@@ -10,10 +10,9 @@ import {
   CardMedia,
   ImageList,
   InputAdornment,
-  Pagination,
-  Stack,
-  TextField,
+  Pagination, TextField,
   Tooltip,
+  useMediaQuery
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -109,14 +108,27 @@ export default function WineCataloguePage() {
       });
     }
   };
-
+  const isDesktop = useMediaQuery("(min-width:1100px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
   return (
     <Paper>
-      <Typography variant="h5">Wine catalogue</Typography>
-
+      <Typography style ={{paddingBottom:"10px"}} variant="h5">Wine catalogue</Typography>
+    
       {storage?.offers && storage?.offers.size != 0 ? (
+        
         <Fragment>
-          <ImageList cols={itemPerPage / 2}>
+           <Pagination
+              page={currentPageIndex}
+              onChange={(_, value) => setCurrentPageIndex(value)}
+              count={Math.ceil(
+                Array.from(storage?.offers.entries()).filter(([key, offer]) =>
+                  offer.quantity.isGreaterThan(0)
+                ).length / itemPerPage
+              )}
+              showFirstButton
+              showLastButton
+            />
+          <ImageList cols={isDesktop? itemPerPage / 2 : isTablet? itemPerPage / 3 : 1}>
             {Array.from(storage?.offers.entries())
               .filter(([key, offer]) => offer.quantity.isGreaterThan(0))
               .filter((_, index) =>
@@ -201,6 +213,7 @@ export default function WineCataloguePage() {
                         }}
                       >
                         <TextField
+                          type="number"
                           sx={{ bottom: 0, position: "relative" }}
                           fullWidth
                           name="quantity"
@@ -217,6 +230,7 @@ export default function WineCataloguePage() {
                             formik.touched.quantity && formik.errors.quantity
                           }
                           InputProps={{
+                            inputProps: { min: 0, max: offer.quantity } ,
                             endAdornment: (
                               <InputAdornment position="end">
                                 <Button
@@ -227,6 +241,7 @@ export default function WineCataloguePage() {
                                 </Button>
                               </InputAdornment>
                             ),
+                            
                           }}
                         />
                       </form>
@@ -235,19 +250,6 @@ export default function WineCataloguePage() {
                 </Card>
               ))}
           </ImageList>
-          <Stack marginLeft="33%" bottom="2vh" position="absolute" spacing={2}>
-            <Pagination
-              page={currentPageIndex}
-              onChange={(_, value) => setCurrentPageIndex(value)}
-              count={Math.ceil(
-                Array.from(storage?.offers.entries()).filter(([key, offer]) =>
-                  offer.quantity.isGreaterThan(0)
-                ).length / itemPerPage
-              )}
-              showFirstButton
-              showLastButton
-            />
-          </Stack>
         </Fragment>
       ) : (
         <Fragment />
