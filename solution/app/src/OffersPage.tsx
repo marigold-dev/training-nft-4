@@ -15,7 +15,7 @@ import {
   TextField,
   Tooltip,
   Typography,
-  useMediaQuery
+  useMediaQuery,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import BigNumber from "bignumber.js";
@@ -181,20 +181,24 @@ export default function OffersPage() {
 
   return (
     <Paper>
-      <Typography style ={{paddingBottom:"10px"}} variant="h5">Sell my bottles</Typography>
+      <Typography style={{ paddingBottom: "10px" }} variant="h5">
+        Sell my bottles
+      </Typography>
       {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
         <Fragment>
-           <Pagination
-              page={currentPageIndex}
-              onChange={(_, value) => setCurrentPageIndex(value)}
-              count={Math.ceil(
-                Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
-              )}
-              showFirstButton
-              showLastButton
-            />
+          <Pagination
+            page={currentPageIndex}
+            onChange={(_, value) => setCurrentPageIndex(value)}
+            count={Math.ceil(
+              Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
+            )}
+            showFirstButton
+            showLastButton
+          />
 
-          <ImageList cols={isDesktop? itemPerPage / 2 : isTablet? itemPerPage / 3 : 1}>
+          <ImageList
+            cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
+          >
             {Array.from(ledgerTokenIDMap.entries())
               .filter((_, index) =>
                 index >= currentPageIndex * itemPerPage - itemPerPage &&
@@ -281,7 +285,7 @@ export default function OffersPage() {
                       >
                         <span>
                           <TextField
-                            type={"number"}
+                            type="number"
                             sx={{ width: "40%" }}
                             name="price"
                             label="price/bottle"
@@ -318,7 +322,7 @@ export default function OffersPage() {
                               formik.touched.quantity && formik.errors.quantity
                             }
                             InputProps={{
-                              inputProps: { min: 0, max: balance.toNumber() } ,
+                              inputProps: { min: 0, max: balance.toNumber() },
                               endAdornment: (
                                 <InputAdornment position="end">
                                   <Button

@@ -2,7 +2,7 @@ import {
   AddCircleOutlined,
   Close,
   KeyboardArrowLeft,
-  KeyboardArrowRight
+  KeyboardArrowRight,
 } from "@mui/icons-material";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import {
@@ -15,7 +15,7 @@ import {
   SwipeableDrawer,
   TextField,
   Toolbar,
-  useMediaQuery
+  useMediaQuery,
 } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -27,16 +27,14 @@ import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
 import React, { Fragment, useEffect, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
-import { autoPlay } from "react-swipeable-views-utils";
 import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
-import { bytes, nat } from "./type-aliases";
-
-const AutoPlaySwipeableViews = autoPlay(SwipeableViews);
+import { address, bytes, nat } from "./type-aliases";
 
 export default function MintPage() {
   const {
+    userAddress,
     nftContrat,
     refreshUserContextOnPageReload,
     nftContratTokenMetadataMap,
@@ -57,8 +55,7 @@ export default function MintPage() {
   };
 
   const handleStepChange = (step: number) => {
-    console.log("handleStepChange", step);
-
+    setActiveStep(step);
   };
 
   const validationSchema = yup.object({
@@ -84,6 +81,13 @@ export default function MintPage() {
       mint(values);
     },
   });
+
+  //open mint drawer if admin
+  useEffect(() => {
+    if (storage!.administrators.indexOf(userAddress! as address) < 0)
+      setFormOpen(false);
+    else setFormOpen(true);
+  }, [userAddress]);
 
   useEffect(() => {
     (async () => {
@@ -140,10 +144,16 @@ export default function MintPage() {
           )
           .send();
 
+        //close directly the form
+        setFormOpen(false);
+        enqueueSnackbar(
+          "Wine collection is minting ... it will be ready on next block, wait for the confirmation message before minting another collection",
+          { variant: "info" }
+        );
+
         await op.confirmation(2);
 
         enqueueSnackbar("Wine collection minted", { variant: "success" });
-        setFormOpen(false);
 
         refreshUserContextOnPageReload(); //force all app to refresh the context
       }
@@ -158,7 +168,7 @@ export default function MintPage() {
     }
   };
 
-  const [formOpen, setFormOpen] = useState<boolean>(true);
+  const [formOpen, setFormOpen] = useState<boolean>(false);
 
   const toggleDrawer =
     (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -172,14 +182,15 @@ export default function MintPage() {
       setFormOpen(open);
     };
 
-    const isTablet = useMediaQuery("(min-width:600px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
 
   return (
     <Paper>
       <Button
+        disabled={storage!.administrators.indexOf(userAddress! as address) < 0}
         sx={{
           position: "absolute",
-          right: "-3em",
+          right: "-9em",
           maringBottom: "40px",
           top: "50vh",
           transform: "rotate(270deg)",
@@ -189,7 +200,11 @@ export default function MintPage() {
         onClick={toggleDrawer(!formOpen)}
       >
         <UnfoldMoreIcon />
-        {" Mint Form "} <UnfoldMoreIcon />
+        {" Mint Form " +
+          (storage!.administrators.indexOf(userAddress! as address) < 0
+            ? " (You are not admin)"
+            : "")}
+        <UnfoldMoreIcon />
       </Button>
 
       <SwipeableDrawer
@@ -199,10 +214,16 @@ export default function MintPage() {
         open={formOpen}
         variant="temporary"
       >
-        <Toolbar sx={isTablet? {marginTop:"0", marginRight:"0"}:{marginTop:"35px", marginRight:"125px"} } />
+        <Toolbar
+          sx={
+            isTablet
+              ? { marginTop: "0", marginRight: "0" }
+              : { marginTop: "35px", marginRight: "125px" }
+          }
+        />
         <Box
           sx={{
-            width: isTablet? "40vw": "60vw",
+            width: isTablet ? "40vw" : "60vw",
             borderColor: "text.secondary",
             borderStyle: "solid",
             borderWidth: "1px",
@@ -221,7 +242,7 @@ export default function MintPage() {
             <Close />
           </Button>
           <form onSubmit={formik.handleSubmit}>
-            <Stack  spacing={2} margin={2} alignContent={"center"}>
+            <Stack spacing={2} margin={2} alignContent={"center"}>
               <Typography variant="h5">Mint a new collection</Typography>
 
               <TextField
@@ -274,6 +295,7 @@ export default function MintPage() {
               />
 
               <TextField
+                type="number"
                 id="standard-basic"
                 name="quantity"
                 label="quantity"
@@ -320,8 +342,8 @@ export default function MintPage() {
       <Typography variant="h5">Mint your wine collection</Typography>
 
       {nftContratTokenMetadataMap.size != 0 ? (
-        <Box sx={{width:"70vw"}}>
-          <AutoPlaySwipeableViews
+        <Box sx={{ width: "70vw" }}>
+          <SwipeableViews
             axis="x"
             index={activeStep}
             onChangeIndex={handleStepChange}
@@ -337,10 +359,23 @@ export default function MintPage() {
                   }}
                   key={token_id.toString()}
                 >
-                  <CardHeader  titleTypographyProps={isTablet?{fontSize:"1.5em" }: {fontSize:"1em"}}title={token.name} />
+                  <CardHeader
+                    titleTypographyProps={
+                      isTablet ? { fontSize: "1.5em" } : { fontSize: "1em" }
+                    }
+                    title={token.name}
+                  />
 
                   <CardMedia
-                    sx={isTablet? {width: "auto", marginLeft: "33%", maxHeight: "50vh"} : {width: "100%" ,maxHeight: "40vh"}}
+                    sx={
+                      isTablet
+                        ? {
+                            width: "auto",
+                            marginLeft: "33%",
+                            maxHeight: "50vh",
+                          }
+                        : { width: "100%", maxHeight: "40vh" }
+                    }
                     component="img"
                     image={token.thumbnailUri?.replace(
                       "ipfs://",
@@ -360,7 +395,7 @@ export default function MintPage() {
                 </Card>
               )
             )}
-          </AutoPlaySwipeableViews>
+          </SwipeableViews>
           <MobileStepper
             variant="text"
             steps={Array.from(nftContratTokenMetadataMap!.entries()).length}

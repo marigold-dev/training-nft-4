@@ -49,7 +49,7 @@ export default function Navigator(props: DrawerProps) {
     wallet,
     nftContratTokenMetadataMap,
   } = React.useContext(UserContext) as UserContextType;
-console.log(React.useContext(UserContext))
+
   const [categories, setCategories] = useState<
     {
       id: string;
