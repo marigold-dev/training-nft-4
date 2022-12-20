@@ -4,7 +4,7 @@ import {
   KeyboardArrowLeft,
   KeyboardArrowRight,
 } from "@mui/icons-material";
-import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import OpenWithIcon from "@mui/icons-material/OpenWith";
 import {
   Box,
   Button,
@@ -25,7 +25,7 @@ import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
 import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
@@ -84,7 +84,7 @@ export default function MintPage() {
 
   //open mint drawer if admin
   useEffect(() => {
-    if (storage!.administrators.indexOf(userAddress! as address) < 0)
+    if (storage && storage!.administrators.indexOf(userAddress! as address) < 0)
       setFormOpen(false);
     else setFormOpen(true);
   }, [userAddress]);
@@ -186,26 +186,27 @@ export default function MintPage() {
 
   return (
     <Paper>
-      <Button
-        disabled={storage!.administrators.indexOf(userAddress! as address) < 0}
-        sx={{
-          position: "absolute",
-          right: "-9em",
-          maringBottom: "40px",
-          top: "50vh",
-          transform: "rotate(270deg)",
-          zIndex: "10000",
-          display: formOpen ? "none" : "block",
-        }}
-        onClick={toggleDrawer(!formOpen)}
-      >
-        <UnfoldMoreIcon />
-        {" Mint Form " +
-          (storage!.administrators.indexOf(userAddress! as address) < 0
-            ? " (You are not admin)"
-            : "")}
-        <UnfoldMoreIcon />
-      </Button>
+      {storage ? (
+        <Button
+          disabled={storage.administrators.indexOf(userAddress! as address) < 0}
+          sx={{
+            p: 1,
+            position: "absolute",
+            right: "0",
+            display: formOpen ? "none" : "block",
+            zIndex: 1,
+          }}
+          onClick={toggleDrawer(!formOpen)}
+        >
+          {" Mint Form " +
+            (storage!.administrators.indexOf(userAddress! as address) < 0
+              ? " (You are not admin)"
+              : "")}
+          <OpenWithIcon />
+        </Button>
+      ) : (
+        ""
+      )}
 
       <SwipeableDrawer
         onClose={toggleDrawer(false)}
@@ -427,7 +428,9 @@ export default function MintPage() {
           />
         </Box>
       ) : (
-        <Fragment />
+        <Typography sx={{ py: "2em" }} variant="h4">
+          Sorry, there is not NFT yet, you need to mint bottles first
+        </Typography>
       )}
     </Paper>
   );

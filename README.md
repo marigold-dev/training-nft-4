@@ -296,7 +296,7 @@ import {
   KeyboardArrowLeft,
   KeyboardArrowRight,
 } from "@mui/icons-material";
-import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import OpenWithIcon from "@mui/icons-material/OpenWith";
 import {
   Box,
   Button,
@@ -317,7 +317,7 @@ import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
 import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
@@ -376,7 +376,7 @@ export default function MintPage() {
 
   //open mint drawer if admin
   useEffect(() => {
-    if (storage!.administrators.indexOf(userAddress! as address) < 0)
+    if (storage && storage!.administrators.indexOf(userAddress! as address) < 0)
       setFormOpen(false);
     else setFormOpen(true);
   }, [userAddress]);
@@ -478,26 +478,27 @@ export default function MintPage() {
 
   return (
     <Paper>
-      <Button
-        disabled={storage!.administrators.indexOf(userAddress! as address) < 0}
-        sx={{
-          position: "absolute",
-          right: "-9em",
-          maringBottom: "40px",
-          top: "50vh",
-          transform: "rotate(270deg)",
-          zIndex: "10000",
-          display: formOpen ? "none" : "block",
-        }}
-        onClick={toggleDrawer(!formOpen)}
-      >
-        <UnfoldMoreIcon />
-        {" Mint Form " +
-          (storage!.administrators.indexOf(userAddress! as address) < 0
-            ? " (You are not admin)"
-            : "")}
-        <UnfoldMoreIcon />
-      </Button>
+      {storage ? (
+        <Button
+          disabled={storage.administrators.indexOf(userAddress! as address) < 0}
+          sx={{
+            p: 1,
+            position: "absolute",
+            right: "0",
+            display: formOpen ? "none" : "block",
+            zIndex: 1,
+          }}
+          onClick={toggleDrawer(!formOpen)}
+        >
+          {" Mint Form " +
+            (storage!.administrators.indexOf(userAddress! as address) < 0
+              ? " (You are not admin)"
+              : "")}
+          <OpenWithIcon />
+        </Button>
+      ) : (
+        ""
+      )}
 
       <SwipeableDrawer
         onClose={toggleDrawer(false)}
@@ -719,7 +720,9 @@ export default function MintPage() {
           />
         </Box>
       ) : (
-        <Fragment />
+        <Typography sx={{ py: "2em" }} variant="h4">
+          Sorry, there is not NFT yet, you need to mint bottles first
+        </Typography>
       )}
     </Paper>
   );
@@ -731,26 +734,37 @@ export default function MintPage() {
 Copy the whole content here
 
 ```typescript
+import { InfoOutlined } from "@mui/icons-material";
 import SellIcon from "@mui/icons-material/Sell";
+
 import {
-  Avatar,
+  Box,
   Button,
   Card,
   CardActions,
   CardContent,
   CardHeader,
+  CardMedia,
+  ImageList,
+  InputAdornment,
+  Pagination,
   TextField,
+  Tooltip,
+  Typography,
+  useMediaQuery,
 } from "@mui/material";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import BigNumber from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import * as yup from "yup";
 import { UserContext, UserContextType } from "./App";
+import ConnectButton from "./ConnectWallet";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
 import { address, nat } from "./type-aliases";
+
+const itemPerPage: number = 6;
 
 const validationSchema = yup.object({
   price: yup
@@ -770,6 +784,7 @@ type Offer = {
 
 export default function OffersPage() {
   const [selectedTokenId, setSelectedTokenId] = React.useState<number>(0);
+  const [currentPageIndex, setCurrentPageIndex] = useState<number>(1);
 
   let [offersTokenIDMap, setOffersTokenIDMap] = React.useState<Map<nat, Offer>>(
     new Map()
@@ -784,6 +799,10 @@ export default function OffersPage() {
     userAddress,
     storage,
     refreshUserContextOnPageReload,
+    Tezos,
+    setUserAddress,
+    setUserBalance,
+    wallet,
   } = React.useContext(UserContext) as UserContextType;
 
   const { enqueueSnackbar } = useSnackbar();
@@ -893,95 +912,181 @@ export default function OffersPage() {
     }
   };
 
+  const isDesktop = useMediaQuery("(min-width:1100px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
+
   return (
-    <Box
-      component="main"
-      sx={{
-        flex: 1,
-        py: 6,
-        px: 4,
-        bgcolor: "#eaeff1",
-        backgroundImage:
-          "url(https://en.vinex.market/skin/default/images/banners/home/new/banner-1180.jpg)",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-      }}
-    >
-      <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
-        {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
-          Array.from(ledgerTokenIDMap.entries()).map(([token_id, balance]) => (
-            <Card key={userAddress + "-" + token_id.toString()}>
-              <CardHeader
-                avatar={
-                  <Avatar sx={{ bgcolor: "purple" }} aria-label="recipe">
-                    {token_id.toString()}
-                  </Avatar>
-                }
-                title={
-                  nftContratTokenMetadataMap.get(token_id.toNumber())?.name
-                }
-              />
+    <Paper>
+      <Typography style={{ paddingBottom: "10px" }} variant="h5">
+        Sell my bottles
+      </Typography>
+      {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
+        <Fragment>
+          <Pagination
+            page={currentPageIndex}
+            onChange={(_, value) => setCurrentPageIndex(value)}
+            count={Math.ceil(
+              Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
+            )}
+            showFirstButton
+            showLastButton
+          />
 
-              <CardContent>
-                <div>{"Owned : " + balance.toNumber()}</div>
-                {offersTokenIDMap.get(token_id) ? (
-                  <div>
-                    {"Offer : " +
-                      offersTokenIDMap.get(token_id)?.quantity +
-                      " at price " +
-                      offersTokenIDMap.get(token_id)?.price.dividedBy(1000000) +
-                      " XTZ/bottle"}
-                  </div>
-                ) : (
-                  ""
-                )}
-              </CardContent>
-
-              <CardActions disableSpacing>
-                <form
-                  onSubmit={(values) => {
-                    setSelectedTokenId(token_id.toNumber());
-                    formik.handleSubmit(values);
-                  }}
-                >
-                  <TextField
-                    name="quantity"
-                    label="quantity"
-                    placeholder="Enter a quantity"
-                    variant="standard"
-                    type="number"
-                    value={formik.values.quantity}
-                    onChange={formik.handleChange}
-                    error={
-                      formik.touched.quantity && Boolean(formik.errors.quantity)
+          <ImageList
+            cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
+          >
+            {Array.from(ledgerTokenIDMap.entries())
+              .filter((_, index) =>
+                index >= currentPageIndex * itemPerPage - itemPerPage &&
+                index < currentPageIndex * itemPerPage
+                  ? true
+                  : false
+              )
+              .map(([token_id, balance]) => (
+                <Card key={token_id + "-" + token_id.toString()}>
+                  <CardHeader
+                    avatar={
+                      <Tooltip
+                        title={
+                          <Box>
+                            <Typography>
+                              {" "}
+                              {"ID : " + token_id.toString()}{" "}
+                            </Typography>
+                            <Typography>
+                              {"Description : " +
+                                nftContratTokenMetadataMap.get(
+                                  token_id.toNumber()
+                                )?.description}
+                            </Typography>
+                          </Box>
+                        }
+                      >
+                        <InfoOutlined />
+                      </Tooltip>
                     }
-                    helperText={
-                      formik.touched.quantity && formik.errors.quantity
+                    title={
+                      nftContratTokenMetadataMap.get(token_id.toNumber())?.name
                     }
                   />
-                  <TextField
-                    name="price"
-                    label="price/bottle (XTZ)"
-                    placeholder="Enter a price"
-                    variant="standard"
-                    type="number"
-                    value={formik.values.price}
-                    onChange={formik.handleChange}
-                    error={formik.touched.price && Boolean(formik.errors.price)}
-                    helperText={formik.touched.price && formik.errors.price}
+                  <CardMedia
+                    sx={{ width: "auto", marginLeft: "33%" }}
+                    component="img"
+                    height="100px"
+                    image={nftContratTokenMetadataMap
+                      .get(token_id.toNumber())
+                      ?.thumbnailUri?.replace(
+                        "ipfs://",
+                        "https://gateway.pinata.cloud/ipfs/"
+                      )}
                   />
-                  <Button type="submit" aria-label="add to favorites">
-                    <SellIcon /> SELL
-                  </Button>
-                </form>
-              </CardActions>
-            </Card>
-          ))
-        ) : (
-          <Fragment />
-        )}
-      </Paper>
-    </Box>
+
+                  <CardContent>
+                    <Box>
+                      <Typography variant="body2">
+                        {"Owned : " + balance.toNumber()}
+                      </Typography>
+                      <Typography variant="body2">
+                        {offersTokenIDMap.get(token_id)
+                          ? "Traded : " +
+                            offersTokenIDMap.get(token_id)?.quantity +
+                            " (price : " +
+                            offersTokenIDMap
+                              .get(token_id)
+                              ?.price.dividedBy(1000000) +
+                            " Tz/b)"
+                          : ""}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+
+                  <CardActions>
+                    {!userAddress ? (
+                      <Box marginLeft="5vw">
+                        <ConnectButton
+                          Tezos={Tezos}
+                          nftContratTokenMetadataMap={
+                            nftContratTokenMetadataMap
+                          }
+                          setUserAddress={setUserAddress}
+                          setUserBalance={setUserBalance}
+                          wallet={wallet}
+                        />
+                      </Box>
+                    ) : (
+                      <form
+                        style={{ width: "100%" }}
+                        onSubmit={(values) => {
+                          setSelectedTokenId(token_id.toNumber());
+                          formik.handleSubmit(values);
+                        }}
+                      >
+                        <span>
+                          <TextField
+                            type="number"
+                            sx={{ width: "40%" }}
+                            name="price"
+                            label="price/bottle"
+                            placeholder="Enter a price"
+                            variant="filled"
+                            value={formik.values.price}
+                            onChange={formik.handleChange}
+                            error={
+                              formik.touched.price &&
+                              Boolean(formik.errors.price)
+                            }
+                            helperText={
+                              formik.touched.price && formik.errors.price
+                            }
+                          />
+                          <TextField
+                            sx={{
+                              width: "60%",
+                              bottom: 0,
+                              position: "relative",
+                            }}
+                            type="number"
+                            label="quantity"
+                            name="quantity"
+                            placeholder="Enter a quantity"
+                            variant="filled"
+                            value={formik.values.quantity}
+                            onChange={formik.handleChange}
+                            error={
+                              formik.touched.quantity &&
+                              Boolean(formik.errors.quantity)
+                            }
+                            helperText={
+                              formik.touched.quantity && formik.errors.quantity
+                            }
+                            InputProps={{
+                              inputProps: { min: 0, max: balance.toNumber() },
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <Button
+                                    type="submit"
+                                    aria-label="add to favorites"
+                                  >
+                                    <SellIcon /> Sell
+                                  </Button>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        </span>
+                      </form>
+                    )}
+                  </CardActions>
+                </Card>
+              ))}{" "}
+          </ImageList>
+        </Fragment>
+      ) : (
+        <Typography sx={{ py: "2em" }} variant="h4">
+          Sorry, you don't own any bottles, buy or mint some first
+        </Typography>
+      )}
+    </Paper>
   );
 }
 ```
@@ -991,26 +1096,37 @@ export default function OffersPage() {
 Copy the whole content here
 
 ```typescript
+import { InfoOutlined } from "@mui/icons-material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import {
-  Avatar,
+  Box,
   Button,
   Card,
   CardActions,
   CardContent,
   CardHeader,
+  CardMedia,
+  ImageList,
+  InputAdornment,
+  Pagination,
   TextField,
+  Tooltip,
+  useMediaQuery,
 } from "@mui/material";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+
 import BigNumber from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import * as yup from "yup";
 import { UserContext, UserContextType } from "./App";
+import ConnectButton from "./ConnectWallet";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
 import { address, nat } from "./type-aliases";
+
+const itemPerPage: number = 6;
 
 type OfferEntry = [{ 0: address; 1: nat }, Offer];
 
@@ -1028,8 +1144,13 @@ const validationSchema = yup.object({
 
 export default function WineCataloguePage() {
   const {
-    nftContrat,
+    Tezos,
     nftContratTokenMetadataMap,
+    setUserAddress,
+    setUserBalance,
+    wallet,
+    userAddress,
+    nftContrat,
     refreshUserContextOnPageReload,
     storage,
   } = React.useContext(UserContext) as UserContextType;
@@ -1047,6 +1168,7 @@ export default function WineCataloguePage() {
     },
   });
   const { enqueueSnackbar } = useSnackbar();
+  const [currentPageIndex, setCurrentPageIndex] = useState<number>(1);
 
   const buy = async (quantity: number, selectedOfferEntry: OfferEntry) => {
     try {
@@ -1085,84 +1207,158 @@ export default function WineCataloguePage() {
       });
     }
   };
-
+  const isDesktop = useMediaQuery("(min-width:1100px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
   return (
-    <Box
-      component="main"
-      sx={{
-        flex: 1,
-        py: 6,
-        px: 4,
-        bgcolor: "#eaeff1",
-        backgroundImage:
-          "url(https://en.vinex.market/skin/default/images/banners/home/new/banner-1180.jpg)",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-      }}
-    >
-      <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
-        {storage?.offers && storage?.offers.size != 0 ? (
-          Array.from(storage?.offers.entries())
-            .filter(([key, offer]) => offer.quantity.isGreaterThan(0))
-            .map(([key, offer]) => (
-              <Card key={key[0] + "-" + key[1].toString()}>
-                <CardHeader
-                  avatar={
-                    <Avatar sx={{ bgcolor: "purple" }} aria-label="recipe">
-                      {key[1].toString()}
-                    </Avatar>
-                  }
-                  title={
-                    nftContratTokenMetadataMap.get(key[1].toNumber())?.name
-                  }
-                  subheader={"seller : " + key[0]}
-                />
+    <Paper>
+      <Typography style={{ paddingBottom: "10px" }} variant="h5">
+        Wine catalogue
+      </Typography>
 
-                <CardContent>
-                  <div>
-                    {"Offer : " +
-                      offer.quantity +
-                      " at price " +
-                      offer.price.dividedBy(1000000) +
-                      " XTZ/bottle"}
-                  </div>
-                </CardContent>
+      {storage?.offers && storage?.offers.size != 0 ? (
+        <Fragment>
+          <Pagination
+            page={currentPageIndex}
+            onChange={(_, value) => setCurrentPageIndex(value)}
+            count={Math.ceil(
+              Array.from(storage?.offers.entries()).filter(([key, offer]) =>
+                offer.quantity.isGreaterThan(0)
+              ).length / itemPerPage
+            )}
+            showFirstButton
+            showLastButton
+          />
+          <ImageList
+            cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
+          >
+            {Array.from(storage?.offers.entries())
+              .filter(([key, offer]) => offer.quantity.isGreaterThan(0))
+              .filter((_, index) =>
+                index >= currentPageIndex * itemPerPage - itemPerPage &&
+                index < currentPageIndex * itemPerPage
+                  ? true
+                  : false
+              )
+              .map(([key, offer]) => (
+                <Card key={key[0] + "-" + key[1].toString()}>
+                  <CardHeader
+                    avatar={
+                      <Tooltip
+                        title={
+                          <Box>
+                            <Typography>
+                              {" "}
+                              {"ID : " + key[1].toString()}{" "}
+                            </Typography>
+                            <Typography>
+                              {"Description : " +
+                                nftContratTokenMetadataMap.get(
+                                  key[1].toNumber()
+                                )?.description}
+                            </Typography>
+                            <Typography>{"Seller : " + key[0]} </Typography>
+                          </Box>
+                        }
+                      >
+                        <InfoOutlined />
+                      </Tooltip>
+                    }
+                    title={
+                      nftContratTokenMetadataMap.get(key[1].toNumber())?.name
+                    }
+                  />
+                  <CardMedia
+                    sx={{ width: "auto", marginLeft: "33%" }}
+                    component="img"
+                    height="100px"
+                    image={nftContratTokenMetadataMap
+                      .get(key[1].toNumber())
+                      ?.thumbnailUri?.replace(
+                        "ipfs://",
+                        "https://gateway.pinata.cloud/ipfs/"
+                      )}
+                  />
 
-                <CardActions disableSpacing>
-                  <form
-                    onSubmit={(values) => {
-                      setSelectedOfferEntry([key, offer]);
-                      formik.handleSubmit(values);
-                    }}
-                  >
-                    <TextField
-                      name="quantity"
-                      label="quantity"
-                      placeholder="Enter a quantity"
-                      variant="standard"
-                      type="number"
-                      value={formik.values.quantity}
-                      onChange={formik.handleChange}
-                      error={
-                        formik.touched.quantity &&
-                        Boolean(formik.errors.quantity)
-                      }
-                      helperText={
-                        formik.touched.quantity && formik.errors.quantity
-                      }
-                    />
-                    <Button type="submit" aria-label="add to favorites">
-                      <ShoppingCartIcon /> BUY
-                    </Button>
-                  </form>
-                </CardActions>
-              </Card>
-            ))
-        ) : (
-          <Fragment />
-        )}
-      </Paper>
-    </Box>
+                  <CardContent>
+                    <Box>
+                      <Typography variant="body2">
+                        {" "}
+                        {"Price : " +
+                          offer.price.dividedBy(1000000) +
+                          " XTZ/bottle"}
+                      </Typography>
+                      <Typography variant="body2">
+                        {"Available units : " + offer.quantity}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+
+                  <CardActions>
+                    {!userAddress ? (
+                      <Box marginLeft="5vw">
+                        <ConnectButton
+                          Tezos={Tezos}
+                          nftContratTokenMetadataMap={
+                            nftContratTokenMetadataMap
+                          }
+                          setUserAddress={setUserAddress}
+                          setUserBalance={setUserBalance}
+                          wallet={wallet}
+                        />
+                      </Box>
+                    ) : (
+                      <form
+                        style={{ width: "100%" }}
+                        onSubmit={(values) => {
+                          setSelectedOfferEntry([key, offer]);
+                          formik.handleSubmit(values);
+                        }}
+                      >
+                        <TextField
+                          type="number"
+                          sx={{ bottom: 0, position: "relative" }}
+                          fullWidth
+                          name="quantity"
+                          label="quantity"
+                          placeholder="Enter a quantity"
+                          variant="filled"
+                          value={formik.values.quantity}
+                          onChange={formik.handleChange}
+                          error={
+                            formik.touched.quantity &&
+                            Boolean(formik.errors.quantity)
+                          }
+                          helperText={
+                            formik.touched.quantity && formik.errors.quantity
+                          }
+                          InputProps={{
+                            inputProps: { min: 0, max: offer.quantity },
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Button
+                                  type="submit"
+                                  aria-label="add to favorites"
+                                >
+                                  <ShoppingCartIcon /> BUY
+                                </Button>
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      </form>
+                    )}
+                  </CardActions>
+                </Card>
+              ))}
+          </ImageList>
+        </Fragment>
+      ) : (
+        <Typography sx={{ py: "2em" }} variant="h4">
+          Sorry, there is not NFT to buy yet, you need to mint or sell bottles
+          first
+        </Typography>
+      )}
+    </Paper>
   );
 }
 ```

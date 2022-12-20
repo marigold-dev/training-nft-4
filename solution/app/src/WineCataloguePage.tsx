@@ -10,9 +10,10 @@ import {
   CardMedia,
   ImageList,
   InputAdornment,
-  Pagination, TextField,
+  Pagination,
+  TextField,
   Tooltip,
-  useMediaQuery
+  useMediaQuery,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -112,23 +113,26 @@ export default function WineCataloguePage() {
   const isTablet = useMediaQuery("(min-width:600px)");
   return (
     <Paper>
-      <Typography style ={{paddingBottom:"10px"}} variant="h5">Wine catalogue</Typography>
-    
+      <Typography style={{ paddingBottom: "10px" }} variant="h5">
+        Wine catalogue
+      </Typography>
+
       {storage?.offers && storage?.offers.size != 0 ? (
-        
         <Fragment>
-           <Pagination
-              page={currentPageIndex}
-              onChange={(_, value) => setCurrentPageIndex(value)}
-              count={Math.ceil(
-                Array.from(storage?.offers.entries()).filter(([key, offer]) =>
-                  offer.quantity.isGreaterThan(0)
-                ).length / itemPerPage
-              )}
-              showFirstButton
-              showLastButton
-            />
-          <ImageList cols={isDesktop? itemPerPage / 2 : isTablet? itemPerPage / 3 : 1}>
+          <Pagination
+            page={currentPageIndex}
+            onChange={(_, value) => setCurrentPageIndex(value)}
+            count={Math.ceil(
+              Array.from(storage?.offers.entries()).filter(([key, offer]) =>
+                offer.quantity.isGreaterThan(0)
+              ).length / itemPerPage
+            )}
+            showFirstButton
+            showLastButton
+          />
+          <ImageList
+            cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
+          >
             {Array.from(storage?.offers.entries())
               .filter(([key, offer]) => offer.quantity.isGreaterThan(0))
               .filter((_, index) =>
@@ -230,7 +234,7 @@ export default function WineCataloguePage() {
                             formik.touched.quantity && formik.errors.quantity
                           }
                           InputProps={{
-                            inputProps: { min: 0, max: offer.quantity } ,
+                            inputProps: { min: 0, max: offer.quantity },
                             endAdornment: (
                               <InputAdornment position="end">
                                 <Button
@@ -241,7 +245,6 @@ export default function WineCataloguePage() {
                                 </Button>
                               </InputAdornment>
                             ),
-                            
                           }}
                         />
                       </form>
@@ -252,7 +255,10 @@ export default function WineCataloguePage() {
           </ImageList>
         </Fragment>
       ) : (
-        <Fragment />
+        <Typography sx={{ py: "2em" }} variant="h4">
+          Sorry, there is not NFT to buy yet, you need to mint or sell bottles
+          first
+        </Typography>
       )}
     </Paper>
   );
