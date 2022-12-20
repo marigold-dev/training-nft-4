@@ -1376,10 +1376,14 @@ export default function WineCataloguePage() {
 3. Click on `Upload an image` an select a bottle picture on your computer
 4. Click on Mint button
 
+![minting.png](./doc/minting.png)
+
 Your picture will be pushed to IPFS and will display, then you are asked to sign the mint operation
 
 - Confirm operation
 - Wait less than 1 minutes until you get the confirmation notification, the page will refresh automatically
+
+![minted.png](./doc/minted.png)
 
 Now you can see the `Trading` menu and the `Bottle offers` sub menu
 
@@ -1392,6 +1396,8 @@ You are owner of this bottle so you can make an offer on it
 - Click on `SELL` button
 - Wait a bit for the confirmation, then it refreshes and you have an offer attached to your NFT
 
+![sell.png](./doc/sell.png)
+
 For buying,
 
 - Disconnect from your user and connect with another account (who has enough XTZ to buy at least 1 bottle)
@@ -1401,6 +1407,8 @@ For buying,
 - Click on `bottle offers` sub menu
 - You are now the owner of some bottles, you can resell a part of it at your own price, etc ...
 
+![buy.png](./doc/buy.png)
+
 For adding more collections, go to the Mint page and repeat the process
 
 # :palm_tree: Conclusion :sun_with_face:
@@ -1408,7 +1416,3 @@ For adding more collections, go to the Mint page and repeat the process
 You are able to play with an any NFT template from the ligo library.
 
 Congratulations !
-
-//TODO FA2.1 ???
-
-//TODO pictures to include everywhere
