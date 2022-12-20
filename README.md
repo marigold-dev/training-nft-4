@@ -30,7 +30,7 @@ cd ..
 
 Point to the new template changing the first import line to
 
-```jsligo
+```ligolang
 #import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
 ```
 
@@ -41,7 +41,7 @@ We can remove `totalSupply` and add two extra key sets `owner_token_ids` and `to
 
 Change the storage definition
 
-```jsligo
+```ligolang
 type offer = {
   quantity : nat,
   price : nat
@@ -62,7 +62,7 @@ type storage =
 
 Update `parameter` type too
 
-```jsligo
+```ligolang
 type parameter =
   | ["Mint", nat,nat,bytes,bytes,bytes,bytes] //token_id, quantity, name , description ,version ,symbol , bytesipfsUrl
   | ["AddAdministrator" , address]
@@ -75,7 +75,7 @@ type parameter =
 
 Update `mint` function
 
-```jsligo
+```ligolang
 const mint = (token_id : nat, quantity: nat, name : bytes, description : bytes,symbol : bytes, ipfsUrl: bytes, s: storage) : ret => {
 
    if(quantity <= (0 as nat)) return failwith("0");
@@ -121,7 +121,7 @@ const mint = (token_id : nat, quantity: nat, name : bytes, description : bytes,s
 
 `sell` function
 
-```jsligo
+```ligolang
 const sell = (token_id : nat, quantity: nat, price: nat, s: storage) : ret => {
 
   //check balance of seller
@@ -138,7 +138,7 @@ const sell = (token_id : nat, quantity: nat, price: nat, s: storage) : ret => {
 
 `buy`function
 
-```jsligo
+```ligolang
 const buy = (token_id : nat, quantity: nat, seller: address, s: storage) : ret => {
 
   //search for the offer
@@ -167,7 +167,7 @@ const buy = (token_id : nat, quantity: nat, seller: address, s: storage) : ret =
 
 and finally the `main`
 
-```jsligo
+```ligolang
 const main = ([p, s]: [parameter,storage]): ret =>
     match(p, {
      Mint: (p: [nat,nat,bytes, bytes, bytes, bytes,bytes]) => mint(p[0],p[1],p[2],p[3],p[4],p[5], s),
@@ -191,7 +191,7 @@ const main = ([p, s]: [parameter,storage]): ret =>
 
 Change the initial storage to
 
-```jsligo
+```ligolang
 #include "nft.jsligo"
 const default_storage =
 {
