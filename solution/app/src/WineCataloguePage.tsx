@@ -1,23 +1,33 @@
+import { InfoOutlined } from "@mui/icons-material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import {
-  Avatar,
+  Box,
   Button,
   Card,
   CardActions,
   CardContent,
   CardHeader,
-  TextField,
+  CardMedia,
+  ImageList,
+  InputAdornment,
+  Pagination, TextField,
+  Tooltip,
+  useMediaQuery
 } from "@mui/material";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+
 import BigNumber from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import * as yup from "yup";
 import { UserContext, UserContextType } from "./App";
+import ConnectButton from "./ConnectWallet";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
 import { address, nat } from "./type-aliases";
+
+const itemPerPage: number = 6;
 
 type OfferEntry = [{ 0: address; 1: nat }, Offer];
 
@@ -35,8 +45,13 @@ const validationSchema = yup.object({
 
 export default function WineCataloguePage() {
   const {
-    nftContrat,
+    Tezos,
     nftContratTokenMetadataMap,
+    setUserAddress,
+    setUserBalance,
+    wallet,
+    userAddress,
+    nftContrat,
     refreshUserContextOnPageReload,
     storage,
   } = React.useContext(UserContext) as UserContextType;
@@ -54,6 +69,7 @@ export default function WineCataloguePage() {
     },
   });
   const { enqueueSnackbar } = useSnackbar();
+  const [currentPageIndex, setCurrentPageIndex] = useState<number>(1);
 
   const buy = async (quantity: number, selectedOfferEntry: OfferEntry) => {
     try {
@@ -92,83 +108,152 @@ export default function WineCataloguePage() {
       });
     }
   };
-
+  const isDesktop = useMediaQuery("(min-width:1100px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
   return (
-    <Box
-      component="main"
-      sx={{
-        flex: 1,
-        py: 6,
-        px: 4,
-        bgcolor: "#eaeff1",
-        backgroundImage:
-          "url(https://en.vinex.market/skin/default/images/banners/home/new/banner-1180.jpg)",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-      }}
-    >
-      <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
-        {storage?.offers && storage?.offers.size != 0 ? (
-          Array.from(storage?.offers.entries())
-            .filter(([key, offer]) => offer.quantity.isGreaterThan(0))
-            .map(([key, offer]) => (
-              <Card key={key[0] + "-" + key[1].toString()}>
-                <CardHeader
-                  avatar={
-                    <Avatar sx={{ bgcolor: "purple" }} aria-label="recipe">
-                      {key[1].toString()}
-                    </Avatar>
-                  }
-                  title={
-                    nftContratTokenMetadataMap.get(key[1].toNumber())?.name
-                  }
-                  subheader={"seller : " + key[0]}
-                />
+    <Paper>
+      <Typography style ={{paddingBottom:"10px"}} variant="h5">Wine catalogue</Typography>
+    
+      {storage?.offers && storage?.offers.size != 0 ? (
+        
+        <Fragment>
+           <Pagination
+              page={currentPageIndex}
+              onChange={(_, value) => setCurrentPageIndex(value)}
+              count={Math.ceil(
+                Array.from(storage?.offers.entries()).filter(([key, offer]) =>
+                  offer.quantity.isGreaterThan(0)
+                ).length / itemPerPage
+              )}
+              showFirstButton
+              showLastButton
+            />
+          <ImageList cols={isDesktop? itemPerPage / 2 : isTablet? itemPerPage / 3 : 1}>
+            {Array.from(storage?.offers.entries())
+              .filter(([key, offer]) => offer.quantity.isGreaterThan(0))
+              .filter((_, index) =>
+                index >= currentPageIndex * itemPerPage - itemPerPage &&
+                index < currentPageIndex * itemPerPage
+                  ? true
+                  : false
+              )
+              .map(([key, offer]) => (
+                <Card key={key[0] + "-" + key[1].toString()}>
+                  <CardHeader
+                    avatar={
+                      <Tooltip
+                        title={
+                          <Box>
+                            <Typography>
+                              {" "}
+                              {"ID : " + key[1].toString()}{" "}
+                            </Typography>
+                            <Typography>
+                              {"Description : " +
+                                nftContratTokenMetadataMap.get(
+                                  key[1].toNumber()
+                                )?.description}
+                            </Typography>
+                            <Typography>{"Seller : " + key[0]} </Typography>
+                          </Box>
+                        }
+                      >
+                        <InfoOutlined />
+                      </Tooltip>
+                    }
+                    title={
+                      nftContratTokenMetadataMap.get(key[1].toNumber())?.name
+                    }
+                  />
+                  <CardMedia
+                    sx={{ width: "auto", marginLeft: "33%" }}
+                    component="img"
+                    height="100px"
+                    image={nftContratTokenMetadataMap
+                      .get(key[1].toNumber())
+                      ?.thumbnailUri?.replace(
+                        "ipfs://",
+                        "https://gateway.pinata.cloud/ipfs/"
+                      )}
+                  />
 
-                <CardContent>
-                  <div>
-                    {"Offer : " +
-                      offer.quantity +
-                      " at price " +
-                      offer.price.dividedBy(1000000) +
-                      " XTZ/bottle"}
-                  </div>
-                </CardContent>
+                  <CardContent>
+                    <Box>
+                      <Typography variant="body2">
+                        {" "}
+                        {"Price : " +
+                          offer.price.dividedBy(1000000) +
+                          " XTZ/bottle"}
+                      </Typography>
+                      <Typography variant="body2">
+                        {"Available units : " + offer.quantity}
+                      </Typography>
+                    </Box>
+                  </CardContent>
 
-                <CardActions disableSpacing>
-                  <form
-                    onSubmit={(values) => {
-                      setSelectedOfferEntry([key, offer]);
-                      formik.handleSubmit(values);
-                    }}
-                  >
-                    <TextField
-                      name="quantity"
-                      label="quantity"
-                      placeholder="Enter a quantity"
-                      variant="standard"
-                      type="number"
-                      value={formik.values.quantity}
-                      onChange={formik.handleChange}
-                      error={
-                        formik.touched.quantity &&
-                        Boolean(formik.errors.quantity)
-                      }
-                      helperText={
-                        formik.touched.quantity && formik.errors.quantity
-                      }
-                    />
-                    <Button type="submit" aria-label="add to favorites">
-                      <ShoppingCartIcon /> BUY
-                    </Button>
-                  </form>
-                </CardActions>
-              </Card>
-            ))
-        ) : (
-          <Fragment />
-        )}
-      </Paper>
-    </Box>
+                  <CardActions>
+                    {!userAddress ? (
+                      <Box marginLeft="5vw">
+                        <ConnectButton
+                          Tezos={Tezos}
+                          nftContratTokenMetadataMap={
+                            nftContratTokenMetadataMap
+                          }
+                          setUserAddress={setUserAddress}
+                          setUserBalance={setUserBalance}
+                          wallet={wallet}
+                        />
+                      </Box>
+                    ) : (
+                      <form
+                        style={{ width: "100%" }}
+                        onSubmit={(values) => {
+                          setSelectedOfferEntry([key, offer]);
+                          formik.handleSubmit(values);
+                        }}
+                      >
+                        <TextField
+                          type="number"
+                          sx={{ bottom: 0, position: "relative" }}
+                          fullWidth
+                          name="quantity"
+                          label="quantity"
+                          placeholder="Enter a quantity"
+                          variant="filled"
+                          value={formik.values.quantity}
+                          onChange={formik.handleChange}
+                          error={
+                            formik.touched.quantity &&
+                            Boolean(formik.errors.quantity)
+                          }
+                          helperText={
+                            formik.touched.quantity && formik.errors.quantity
+                          }
+                          InputProps={{
+                            inputProps: { min: 0, max: offer.quantity } ,
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Button
+                                  type="submit"
+                                  aria-label="add to favorites"
+                                >
+                                  <ShoppingCartIcon /> BUY
+                                </Button>
+                              </InputAdornment>
+                            ),
+                            
+                          }}
+                        />
+                      </form>
+                    )}
+                  </CardActions>
+                </Card>
+              ))}
+          </ImageList>
+        </Fragment>
+      ) : (
+        <Fragment />
+      )}
+    </Paper>
   );
 }

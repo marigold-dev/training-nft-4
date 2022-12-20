@@ -1,22 +1,24 @@
 import SellIcon from "@mui/icons-material/Sell";
 import SettingsIcon from "@mui/icons-material/Settings";
-import StorefrontIcon from "@mui/icons-material/Storefront";
 import WineBarIcon from "@mui/icons-material/WineBar";
+import { Stack } from "@mui/material";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Drawer, { DrawerProps } from "@mui/material/Drawer";
+import MaterialLink from "@mui/material/Link";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { UserContext, UserContextType } from "./App";
 
 export enum PagesPaths {
-  WELCOME = "",
-  CATALOG = "catalogue",
+  CATALOG = "",
   OFFERS = "offers",
   MINT = "mint",
 }
@@ -78,7 +80,7 @@ export default function Navigator(props: DrawerProps) {
               path: "/" + PagesPaths.CATALOG,
             },
             {
-              id: "Bottle offers",
+              id: "Sell bottles",
               icon: <SellIcon />,
               path: "/" + PagesPaths.OFFERS,
             },
@@ -88,7 +90,7 @@ export default function Navigator(props: DrawerProps) {
           id: "Administration",
           children: [
             {
-              id: "Mint wine collection",
+              id: "Wine collection",
               icon: <SettingsIcon />,
               path: "/" + PagesPaths.MINT,
             },
@@ -97,50 +99,63 @@ export default function Navigator(props: DrawerProps) {
       ]);
   }, [nftContratTokenMetadataMap, userAddress]);
 
+  function Copyright() {
+    return (
+      <Typography left="1em" bottom="2vh" position="absolute" align="center">
+        {"Copyright © "}
+        <MaterialLink color="inherit" href="https://www.marigold.dev/">
+          Marigold
+        </MaterialLink>{" "}
+        {new Date().getFullYear()}
+      </Typography>
+    );
+  }
+
   return (
     <Drawer variant="permanent" {...other}>
-      <List disablePadding>
-        <ListItem
-          sx={{
-            ...item,
-            ...itemCategory,
-            fontSize: 22,
-            color: "#fff",
-          }}
-        >
-          <img src="winelord.gif" height={100} />
-        </ListItem>
-        <ListItem sx={{ ...item, ...itemCategory }}>
-          <ListItemIcon>
-            <StorefrontIcon />
-          </ListItemIcon>
-          <ListItemText>NFT Wine Marketplace</ListItemText>
-        </ListItem>
-        {userAddress
-          ? categories.map(({ id, children }) => (
-              <Box key={id} sx={{ bgcolor: "#101F33" }}>
-                <ListItem sx={{ py: 2, px: 3 }}>
-                  <ListItemText sx={{ color: "#fff" }}>{id}</ListItemText>
-                </ListItem>
-                {children.map(({ id: childId, icon, path }) => (
-                  <ListItem
-                    selected={path === location.pathname}
-                    disablePadding
-                    key={childId}
-                  >
-                    <ListItemButton sx={item}>
-                      <Link to={path}>
-                        <ListItemIcon>{icon}</ListItemIcon>
-                        <ListItemText>{childId}</ListItemText>
-                      </Link>
-                    </ListItemButton>
+      <Toolbar />
+
+      <Box
+        sx={{
+          borderColor: "text.secondary",
+          borderStyle: "solid",
+          borderWidth: "1px",
+          paddingTop: 5,
+          height: "calc(100vh - 64px)",
+        }}
+      >
+        <List disablePadding>
+          {userAddress
+            ? categories.map(({ id, children }) => (
+                <Box key={id}>
+                  <ListItem sx={{ py: 1, px: 2 }}>
+                    <ListItemText>
+                      <Typography variant="h5">{id}</Typography>
+                    </ListItemText>
                   </ListItem>
-                ))}
-                <Divider sx={{ mt: 2 }} />
-              </Box>
-            ))
-          : ""}
-      </List>
+                  {children.map(({ id: childId, icon, path }) => (
+                    <ListItem
+                      selected={path === location.pathname}
+                      disablePadding
+                      key={childId}
+                    >
+                      <ListItemButton sx={item}>
+                        <Link style={{ textDecoration: "none" }} to={path}>
+                          <Stack direction="row">
+                            <ListItemIcon>{icon}</ListItemIcon>
+                            <ListItemText>{childId}</ListItemText>
+                          </Stack>
+                        </Link>
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                  <Divider sx={{ mt: 2 }} />
+                </Box>
+              ))
+            : ""}
+        </List>
+        <Copyright />
+      </Box>
     </Drawer>
   );
 }

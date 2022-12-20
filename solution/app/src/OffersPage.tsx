@@ -1,23 +1,34 @@
+import { InfoOutlined } from "@mui/icons-material";
 import SellIcon from "@mui/icons-material/Sell";
+
 import {
-  Avatar,
+  Box,
   Button,
   Card,
   CardActions,
   CardContent,
   CardHeader,
+  CardMedia,
+  ImageList,
+  InputAdornment,
+  Pagination,
   TextField,
+  Tooltip,
+  Typography,
+  useMediaQuery,
 } from "@mui/material";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import BigNumber from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import * as yup from "yup";
 import { UserContext, UserContextType } from "./App";
+import ConnectButton from "./ConnectWallet";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
 import { address, nat } from "./type-aliases";
+
+const itemPerPage: number = 6;
 
 const validationSchema = yup.object({
   price: yup
@@ -37,6 +48,7 @@ type Offer = {
 
 export default function OffersPage() {
   const [selectedTokenId, setSelectedTokenId] = React.useState<number>(0);
+  const [currentPageIndex, setCurrentPageIndex] = useState<number>(1);
 
   let [offersTokenIDMap, setOffersTokenIDMap] = React.useState<Map<nat, Offer>>(
     new Map()
@@ -51,6 +63,10 @@ export default function OffersPage() {
     userAddress,
     storage,
     refreshUserContextOnPageReload,
+    Tezos,
+    setUserAddress,
+    setUserBalance,
+    wallet,
   } = React.useContext(UserContext) as UserContextType;
 
   const { enqueueSnackbar } = useSnackbar();
@@ -160,94 +176,176 @@ export default function OffersPage() {
     }
   };
 
+  const isDesktop = useMediaQuery("(min-width:1100px)");
+  const isTablet = useMediaQuery("(min-width:600px)");
+
   return (
-    <Box
-      component="main"
-      sx={{
-        flex: 1,
-        py: 6,
-        px: 4,
-        bgcolor: "#eaeff1",
-        backgroundImage:
-          "url(https://en.vinex.market/skin/default/images/banners/home/new/banner-1180.jpg)",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-      }}
-    >
-      <Paper sx={{ maxWidth: 936, margin: "auto", overflow: "hidden" }}>
-        {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
-          Array.from(ledgerTokenIDMap.entries()).map(([token_id, balance]) => (
-            <Card key={userAddress + "-" + token_id.toString()}>
-              <CardHeader
-                avatar={
-                  <Avatar sx={{ bgcolor: "purple" }} aria-label="recipe">
-                    {token_id.toString()}
-                  </Avatar>
-                }
-                title={
-                  nftContratTokenMetadataMap.get(token_id.toNumber())?.name
-                }
-              />
+    <Paper>
+      <Typography style={{ paddingBottom: "10px" }} variant="h5">
+        Sell my bottles
+      </Typography>
+      {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
+        <Fragment>
+          <Pagination
+            page={currentPageIndex}
+            onChange={(_, value) => setCurrentPageIndex(value)}
+            count={Math.ceil(
+              Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
+            )}
+            showFirstButton
+            showLastButton
+          />
 
-              <CardContent>
-                <div>{"Owned : " + balance.toNumber()}</div>
-                {offersTokenIDMap.get(token_id) ? (
-                  <div>
-                    {"Offer : " +
-                      offersTokenIDMap.get(token_id)?.quantity +
-                      " at price " +
-                      offersTokenIDMap.get(token_id)?.price.dividedBy(1000000) +
-                      " XTZ/bottle"}
-                  </div>
-                ) : (
-                  ""
-                )}
-              </CardContent>
-
-              <CardActions disableSpacing>
-                <form
-                  onSubmit={(values) => {
-                    setSelectedTokenId(token_id.toNumber());
-                    formik.handleSubmit(values);
-                  }}
-                >
-                  <TextField
-                    name="quantity"
-                    label="quantity"
-                    placeholder="Enter a quantity"
-                    variant="standard"
-                    type="number"
-                    value={formik.values.quantity}
-                    onChange={formik.handleChange}
-                    error={
-                      formik.touched.quantity && Boolean(formik.errors.quantity)
+          <ImageList
+            cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
+          >
+            {Array.from(ledgerTokenIDMap.entries())
+              .filter((_, index) =>
+                index >= currentPageIndex * itemPerPage - itemPerPage &&
+                index < currentPageIndex * itemPerPage
+                  ? true
+                  : false
+              )
+              .map(([token_id, balance]) => (
+                <Card key={token_id + "-" + token_id.toString()}>
+                  <CardHeader
+                    avatar={
+                      <Tooltip
+                        title={
+                          <Box>
+                            <Typography>
+                              {" "}
+                              {"ID : " + token_id.toString()}{" "}
+                            </Typography>
+                            <Typography>
+                              {"Description : " +
+                                nftContratTokenMetadataMap.get(
+                                  token_id.toNumber()
+                                )?.description}
+                            </Typography>
+                          </Box>
+                        }
+                      >
+                        <InfoOutlined />
+                      </Tooltip>
                     }
-                    helperText={
-                      formik.touched.quantity && formik.errors.quantity
+                    title={
+                      nftContratTokenMetadataMap.get(token_id.toNumber())?.name
                     }
                   />
-                  <TextField
-                    name="price"
-                    label="price/bottle (XTZ)"
-                    placeholder="Enter a price"
-                    variant="standard"
-                    type="number"
-                    value={formik.values.price}
-                    onChange={formik.handleChange}
-                    error={formik.touched.price && Boolean(formik.errors.price)}
-                    helperText={formik.touched.price && formik.errors.price}
+                  <CardMedia
+                    sx={{ width: "auto", marginLeft: "33%" }}
+                    component="img"
+                    height="100px"
+                    image={nftContratTokenMetadataMap
+                      .get(token_id.toNumber())
+                      ?.thumbnailUri?.replace(
+                        "ipfs://",
+                        "https://gateway.pinata.cloud/ipfs/"
+                      )}
                   />
-                  <Button type="submit" aria-label="add to favorites">
-                    <SellIcon /> SELL
-                  </Button>
-                </form>
-              </CardActions>
-            </Card>
-          ))
-        ) : (
-          <Fragment />
-        )}
-      </Paper>
-    </Box>
+
+                  <CardContent>
+                    <Box>
+                      <Typography variant="body2">
+                        {"Owned : " + balance.toNumber()}
+                      </Typography>
+                      <Typography variant="body2">
+                        {"Traded : " +
+                          offersTokenIDMap.get(token_id)?.quantity +
+                          " (price : " +
+                          offersTokenIDMap
+                            .get(token_id)
+                            ?.price.dividedBy(1000000) +
+                          " Tz/b)"}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+
+                  <CardActions>
+                    {!userAddress ? (
+                      <Box marginLeft="5vw">
+                        <ConnectButton
+                          Tezos={Tezos}
+                          nftContratTokenMetadataMap={
+                            nftContratTokenMetadataMap
+                          }
+                          setUserAddress={setUserAddress}
+                          setUserBalance={setUserBalance}
+                          wallet={wallet}
+                        />
+                      </Box>
+                    ) : (
+                      <form
+                        style={{ width: "100%" }}
+                        onSubmit={(values) => {
+                          setSelectedTokenId(token_id.toNumber());
+                          formik.handleSubmit(values);
+                        }}
+                      >
+                        <span>
+                          <TextField
+                            type="number"
+                            sx={{ width: "40%" }}
+                            name="price"
+                            label="price/bottle"
+                            placeholder="Enter a price"
+                            variant="filled"
+                            value={formik.values.price}
+                            onChange={formik.handleChange}
+                            error={
+                              formik.touched.price &&
+                              Boolean(formik.errors.price)
+                            }
+                            helperText={
+                              formik.touched.price && formik.errors.price
+                            }
+                          />
+                          <TextField
+                            sx={{
+                              width: "60%",
+                              bottom: 0,
+                              position: "relative",
+                            }}
+                            type="number"
+                            label="quantity"
+                            name="quantity"
+                            placeholder="Enter a quantity"
+                            variant="filled"
+                            value={formik.values.quantity}
+                            onChange={formik.handleChange}
+                            error={
+                              formik.touched.quantity &&
+                              Boolean(formik.errors.quantity)
+                            }
+                            helperText={
+                              formik.touched.quantity && formik.errors.quantity
+                            }
+                            InputProps={{
+                              inputProps: { min: 0, max: balance.toNumber() },
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <Button
+                                    type="submit"
+                                    aria-label="add to favorites"
+                                  >
+                                    <SellIcon /> Sell
+                                  </Button>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        </span>
+                      </form>
+                    )}
+                  </CardActions>
+                </Card>
+              ))}{" "}
+          </ImageList>
+        </Fragment>
+      ) : (
+        <Fragment />
+      )}
+    </Paper>
   );
 }
