@@ -1,70 +1,70 @@
 {
     "operations": {},
     "tasks": {
-        "@taqueria/plugin-taquito.deploy.1670312239064": {
+        "@taqueria/plugin-taquito.deploy.1671443980377": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1670312239064,
+            "time": 1671443980377,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1QyJW133XNM5xyMixG1LRk17ComsrdNnsA",
+                    "address": "KT19nyjob4FVK4ghGJrRhqgPF9WQQeaNJjGD",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1670333140678": {
+        "@taqueria/plugin-taquito.deploy.1671461897608": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1670333140678,
+            "time": 1671461897608,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1NhpQW7fL2qXEXXN6UvgDNtaoYmDnpgKjf",
+                    "address": "KT1UY9NAaSbZSYZjjJvukQgQaPVL78E7UN6D",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1670334118381": {
+        "@taqueria/plugin-taquito.deploy.1671463846059": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1670334118381,
+            "time": 1671463846059,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1V4yRVfLgucvPgesUqh8dw4VB84cX24TMC",
+                    "address": "KT1PLvVGaM4YE1qLSdLZUZ1EhozqzYUQ1xed",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1670334172449": {
+        "@taqueria/plugin-taquito.deploy.1671526482798": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1670334172449,
+            "time": 1671526482798,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1QpgKk4TUF6gCjZcWEPNssWshjx81k8wJk",
+                    "address": "KT1HAxs2RuoxWni1WqabGJjBvnkGtyNwVFSX",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1670340170259": {
+        "@taqueria/plugin-taquito.deploy.1671530678055": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1670340170259,
+            "time": 1671530678055,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1FTriL78AFoHSV6861S6JHnRC3XgWF351a",
+                    "address": "KT1KFE9jpJ8t1QKQvQiFoHzKD3pUfDJP2FHy",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"

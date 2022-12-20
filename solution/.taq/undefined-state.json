@@ -1,10 +1,10 @@
 {
     "operations": {},
     "tasks": {
-        "@taqueria/plugin-ligo.compile.1670315054275": {
+        "@taqueria/plugin-ligo.compile.1671461825667": {
             "task": "compile",
             "plugin": "@taqueria/plugin-ligo",
-            "time": 1670315054275,
+            "time": 1671461825667,
             "output": [
                 {
                     "contract": "nft.jsligo",
@@ -20,10 +20,10 @@
                 }
             ]
         },
-        "@taqueria/plugin-ligo.compile.1670331832637": {
+        "@taqueria/plugin-ligo.compile.1671461873682": {
             "task": "compile",
             "plugin": "@taqueria/plugin-ligo",
-            "time": 1670331832637,
+            "time": 1671461873682,
             "output": [
                 {
                     "contract": "nft.jsligo",
@@ -39,10 +39,10 @@
                 }
             ]
         },
-        "@taqueria/plugin-ligo.compile.1670331960855": {
+        "@taqueria/plugin-ligo.compile.1671463824963": {
             "task": "compile",
             "plugin": "@taqueria/plugin-ligo",
-            "time": 1670331960855,
+            "time": 1671463824963,
             "output": [
                 {
                     "contract": "nft.jsligo",
@@ -58,10 +58,10 @@
                 }
             ]
         },
-        "@taqueria/plugin-ligo.compile.1670333751203": {
+        "@taqueria/plugin-ligo.compile.1671526455190": {
             "task": "compile",
             "plugin": "@taqueria/plugin-ligo",
-            "time": 1670333751203,
+            "time": 1671526455190,
             "output": [
                 {
                     "contract": "nft.jsligo",
@@ -77,10 +77,10 @@
                 }
             ]
         },
-        "@taqueria/plugin-ligo.compile.1670333921955": {
+        "@taqueria/plugin-ligo.compile.1671530655898": {
             "task": "compile",
             "plugin": "@taqueria/plugin-ligo",
-            "time": 1670333921955,
+            "time": 1671530655898,
             "output": [
                 {
                     "contract": "nft.jsligo",

@@ -251,13 +251,15 @@ export default function OffersPage() {
                         {"Owned : " + balance.toNumber()}
                       </Typography>
                       <Typography variant="body2">
-                        {"Traded : " +
-                          offersTokenIDMap.get(token_id)?.quantity +
-                          " (price : " +
-                          offersTokenIDMap
-                            .get(token_id)
-                            ?.price.dividedBy(1000000) +
-                          " Tz/b)"}
+                        {offersTokenIDMap.get(token_id)
+                          ? "Traded : " +
+                            offersTokenIDMap.get(token_id)?.quantity +
+                            " (price : " +
+                            offersTokenIDMap
+                              .get(token_id)
+                              ?.price.dividedBy(1000000) +
+                            " Tz/b)"
+                          : ""}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -344,7 +346,9 @@ export default function OffersPage() {
           </ImageList>
         </Fragment>
       ) : (
-        <Fragment />
+        <Typography sx={{ py: "2em" }} variant="h4">
+          Sorry, you don't own any bottles, buy or mint some first
+        </Typography>
       )}
     </Paper>
   );
