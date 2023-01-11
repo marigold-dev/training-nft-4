@@ -11,7 +11,7 @@ We finish by using multi asset template.
 - you have unlimited NFT collections
 - you have unlimited quantity of items in each collection
 
-To resume, you are producting any quantity of wine bottles on n collections
+To resume, you are producing any quantity of wine bottles on `n` collections
 
 # :arrow_forward: Go forward
 
@@ -36,12 +36,13 @@ Point to the new template changing the first import line to
 #import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
 ```
 
-It means you will change the namespace from `SINGLEASSET` to `MULTIASSET` everywhere (like this you are sure to use the correct library)
+It means you will change the namespace from `SINGLEASSET` to `MULTIASSET` everywhere _(like this you are sure to use the correct library)_
 
-You will introduce the token_id back as there a several collections now.
+You will re-introduce the `token_id` as there is several collections now.
+
 We can remove `totalSupply` and add two extra key sets `owner_token_ids` and `token_ids`
 
-Change the storage definition
+Change the `storage` definition
 
 ```ligolang
 type offer = {
@@ -121,7 +122,7 @@ const mint = (token_id : nat, quantity: nat, name : bytes, description : bytes,s
      token_ids: Set.add(token_id, s.token_ids)}]};
 ```
 
-`sell` function
+You also need to update `sell` function
 
 ```ligolang
 const sell = (token_id : nat, quantity: nat, price: nat, s: storage) : ret => {
@@ -138,7 +139,7 @@ const sell = (token_id : nat, quantity: nat, price: nat, s: storage) : ret => {
 };
 ```
 
-`buy`function
+Same for the `buy` function
 
 ```ligolang
 const buy = (token_id : nat, quantity: nat, seller: address, s: storage) : ret => {
@@ -167,7 +168,7 @@ const buy = (token_id : nat, quantity: nat, seller: address, s: storage) : ret =
 };
 ```
 
-and finally the `main`
+and finally the `main` function
 
 ```ligolang
 const main = ([p, s]: [parameter,storage]): ret =>
@@ -214,9 +215,7 @@ Compile again and deploy to ghostnet
 ```bash
 TAQ_LIGO_IMAGE=ligolang/ligo:0.57.0 taq compile nft.jsligo
 taq deploy nft.tz -e "testing"
-```
 
-```logs
 ┌──────────┬──────────────────────────────────────┬───────┬──────────────────┬────────────────────────────────┐
 │ Contract │ Address                              │ Alias │ Balance In Mutez │ Destination                    │
 ├──────────┼──────────────────────────────────────┼───────┼──────────────────┼────────────────────────────────┤
@@ -224,7 +223,7 @@ taq deploy nft.tz -e "testing"
 └──────────┴──────────────────────────────────────┴───────┴──────────────────┴────────────────────────────────┘
 ```
 
-:tada: Hooray ! We have finished the backend :tada:
+**:tada: Hooray ! We have finished the smart contract _(backend)_ :tada:**
 
 # :performing_arts: NFT Marketplace front
 
@@ -239,8 +238,8 @@ yarn run start
 
 ## Update in `App.tsx`
 
-We forget about token_id == 0 and we fetch back all tokens.
-Replace the function `refreshUserContextOnPageReload` by
+We forget about `token_id == 0` and fetch back all tokens.
+Replace the function `refreshUserContextOnPageReload` by the following content
 
 ```typescript
 const refreshUserContextOnPageReload = async () => {
@@ -289,7 +288,7 @@ import { nat } from "./type-aliases";
 
 ## Update in `MintPage.tsx`
 
-Just update the `mint` call adding the missing quantity, and add back the token_id counter incrementer
+Just update the `mint` call adding the missing quantity, and add back the `token_id` counter incrementer
 
 ```typescript
 import {
@@ -733,7 +732,7 @@ export default function MintPage() {
 
 ## Update in `OffersPage.tsx`
 
-Copy the whole content here
+Copy the content below, and paste it to `OffersPage.tsx`
 
 ```typescript
 import { InfoOutlined } from "@mui/icons-material";
@@ -1095,7 +1094,7 @@ export default function OffersPage() {
 
 ## Update in `WineCataloguePage.tsx`
 
-Copy the whole content here
+Copy the content below, and paste it to `WineCataloguePage.tsx`
 
 ```typescript
 import { InfoOutlined } from "@mui/icons-material";
@@ -1367,51 +1366,51 @@ export default function WineCataloguePage() {
 
 ## Let's play
 
-1. Connect with your wallet an choose `alice` account (or one of the administrators you set on the smart contract earlier). You are redirected to the Administration /mint page as there is no nft minted yet
-2. Enter these values on the form for example :
+1. Connect with your wallet an choose `alice` account _(or one of the administrators you set on the smart contract earlier)_. You are redirected to the Administration/mint page as there is no NFT minted yet
+2. Create an asset, for example :
 
-- name : Saint Emilion - Franc la Rose
-- symbol : SEMIL
-- description : Grand cru 2007
-- quantity : 1000
+- `name`: Saint Emilion - Franc la Rose
+- `symbol`: SEMIL
+- `description`: Grand cru 2007
+- `quantity`: 1000
 
-3. Click on `Upload an image` an select a bottle picture on your computer
+3. Click on `Upload an image` and select a bottle picture on your computer
 4. Click on Mint button
 
 ![minting.png](./doc/minting.png)
 
-Your picture will be pushed to IPFS and will display, then you are asked to sign the mint operation
+Your picture will be pushed to IPFS and will be displayed, then your wallet will ask you to sign the `mint` operation.
 
 - Confirm operation
-- Wait less than 1 minutes until you get the confirmation notification, the page will refresh automatically
+- Wait less than 1 minute to get the confirmation notification, the page will be automatically refreshed
 
 ![minted.png](./doc/minted.png)
 
-Now you can see the `Trading` menu and the `Bottle offers` sub menu
+Now you can see the `Trading` menu and the `Bottle offers` sub-menu
 
 Click on the sub-menu entry
 
-You are owner of this bottle so you can make an offer on it
+You are owner of this bottle so you can create an offer on it
 
 - Enter a quantity
 - Enter a price offer
 - Click on `SELL` button
-- Wait a bit for the confirmation, then it refreshes and you have an offer attached to your NFT
+- Wait a bit for the confirmation, then once automatically refreshed you have an offer attached to your NFT!
 
 ![sell.png](./doc/sell.png)
 
 For buying,
 
-- Disconnect from your user and connect with another account (who has enough XTZ to buy at least 1 bottle)
-- The logged buyer can see that alice is selling some bottles from the unique collection
+- Disconnect from your user and connect with another account _(who has enough XTZ to buy at least 1 bottle)_
+- The buyer will see that alice is selling some bottles from the unique collection
 - Buy some bottles while clicking on `BUY` button
-- Wait for the confirmation, then the offer is updated on the market (depending how many bottle you bought)
-- Click on `bottle offers` sub menu
+- Wait for the confirmation, then the offer is updated on the market _(depending how many bottle you bought)_
+- Click on `bottle offers` sub-menu
 - You are now the owner of some bottles, you can resell a part of it at your own price, etc ...
 
 ![buy.png](./doc/buy.png)
 
-For adding more collections, go to the Mint page and repeat the process
+To add more collections, go to the Mint page and repeat the process.
 
 # :palm_tree: Conclusion :sun_with_face:
 
