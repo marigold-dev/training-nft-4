@@ -30,7 +30,7 @@ cd ..
 
 ## Do breaking changes on nft template to fit with the new library
 
-Point to the new template changing the first import line to
+Point to the new template changing the first import line of `nft.jsligo` file to
 
 ```ligolang
 #import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
@@ -67,7 +67,7 @@ Update `parameter` type too
 
 ```ligolang
 type parameter =
-  | ["Mint", nat,nat,bytes,bytes,bytes,bytes] //token_id, quantity, name , description ,version ,symbol , bytesipfsUrl
+  | ["Mint", nat,nat,bytes,bytes,bytes,bytes] //token_id, quantity, name , description ,symbol , bytesipfsUrl
   | ["AddAdministrator" , address]
   | ["Buy", nat,nat, address]  //buy token_id,quantity at a seller offer price
   | ["Sell", nat,nat, nat]  //sell token_id,quantity at a price
@@ -171,25 +171,110 @@ const buy = (token_id : nat, quantity: nat, seller: address, s: storage) : ret =
 and finally the `main` function
 
 ```ligolang
-const main = ([p, s]: [parameter,storage]): ret =>
-    match(p, {
-     Mint: (p: [nat,nat,bytes, bytes, bytes, bytes,bytes]) => mint(p[0],p[1],p[2],p[3],p[4],p[5], s),
-     AddAdministrator : (p : address) => {if(Set.mem(Tezos.get_sender(), s.administrators)){ return [list([]),{...s,administrators:Set.add(p, s.administrators)}]} else {return failwith("1");}} ,
-     Buy: (p : [nat,nat,address]) => buy(p[0],p[1],p[2],s),
-     Sell: (p : [nat,nat,nat]) => sell(p[0],p[1],p[2],s),
-     Transfer: (p: MULTIASSET.transfer) => {
-      const ret2 : [list<operation>, MULTIASSET.storage] = MULTIASSET.transfer(p,{ledger:s.ledger,metadata:s.metadata,token_metadata:s.token_metadata,operators:s.operators,owner_token_ids:s.owner_token_ids,token_ids:s.token_ids});
-      return [ret2[0],{...s,ledger:ret2[1].ledger,metadata:ret2[1].metadata,token_metadata:ret2[1].token_metadata,operators:ret2[1].operators,owner_token_ids:ret2[1].owner_token_ids,token_ids:ret2[1].token_ids}];
-     },
-     Balance_of: (p: MULTIASSET.balance_of) => {
-      const ret2 : [list<operation>, MULTIASSET.storage] = MULTIASSET.balance_of(p,{ledger:s.ledger,metadata:s.metadata,token_metadata:s.token_metadata,operators:s.operators,owner_token_ids:s.owner_token_ids,token_ids:s.token_ids});
-      return [ret2[0],{...s,ledger:ret2[1].ledger,metadata:ret2[1].metadata,token_metadata:ret2[1].token_metadata,operators:ret2[1].operators,owner_token_ids:ret2[1].owner_token_ids,token_ids:ret2[1].token_ids}];
+const main = ([p, s]: [parameter, storage]): ret =>
+  match(
+    p,
+    {
+      Mint: (p: [nat, nat, bytes, bytes, bytes, bytes]) =>
+        mint(p[0], p[1], p[2], p[3], p[4], p[5], s),
+      AddAdministrator: (p: address) => {
+        if (Set.mem(Tezos.get_sender(), s.administrators)) {
+          return [
+            list([]),
+            { ...s, administrators: Set.add(p, s.administrators) }
+          ]
+        } else {
+          return failwith("1")
+        }
       },
-     Update_operators: (p: MULTIASSET.update_operator) => {
-      const ret2 : [list<operation>, MULTIASSET.storage] = MULTIASSET.update_ops(p,{ledger:s.ledger,metadata:s.metadata,token_metadata:s.token_metadata,operators:s.operators,owner_token_ids:s.owner_token_ids,token_ids:s.token_ids});
-      return [ret2[0],{...s,ledger:ret2[1].ledger,metadata:ret2[1].metadata,token_metadata:ret2[1].token_metadata,operators:ret2[1].operators,owner_token_ids:ret2[1].owner_token_ids,token_ids:ret2[1].token_ids}];
+      Buy: (p: [nat, nat, address]) => buy(p[0], p[1], p[2], s),
+      Sell: (p: [nat, nat, nat]) => sell(p[0], p[1], p[2], s),
+      Transfer: (p: MULTIASSET.transfer) => {
+        const ret2: [list<operation>, MULTIASSET.storage] =
+          MULTIASSET.transfer(
+            [
+              p,
+              {
+                ledger: s.ledger,
+                metadata: s.metadata,
+                token_metadata: s.token_metadata,
+                operators: s.operators,
+                owner_token_ids: s.owner_token_ids,
+                token_ids: s.token_ids
+              }
+            ]
+          );
+        return [
+          ret2[0],
+          {
+            ...s,
+            ledger: ret2[1].ledger,
+            metadata: ret2[1].metadata,
+            token_metadata: ret2[1].token_metadata,
+            operators: ret2[1].operators,
+            owner_token_ids: ret2[1].owner_token_ids,
+            token_ids: ret2[1].token_ids
+          }
+        ]
+      },
+      Balance_of: (p: MULTIASSET.balance_of) => {
+        const ret2: [list<operation>, MULTIASSET.storage] =
+          MULTIASSET.balance_of(
+            [
+              p,
+              {
+                ledger: s.ledger,
+                metadata: s.metadata,
+                token_metadata: s.token_metadata,
+                operators: s.operators,
+                owner_token_ids: s.owner_token_ids,
+                token_ids: s.token_ids
+              }
+            ]
+          );
+        return [
+          ret2[0],
+          {
+            ...s,
+            ledger: ret2[1].ledger,
+            metadata: ret2[1].metadata,
+            token_metadata: ret2[1].token_metadata,
+            operators: ret2[1].operators,
+            owner_token_ids: ret2[1].owner_token_ids,
+            token_ids: ret2[1].token_ids
+          }
+        ]
+      },
+      Update_operators: (p: MULTIASSET.update_operators) => {
+        const ret2: [list<operation>, MULTIASSET.storage] =
+          MULTIASSET.update_ops(
+            [
+              p,
+              {
+                ledger: s.ledger,
+                metadata: s.metadata,
+                token_metadata: s.token_metadata,
+                operators: s.operators,
+                owner_token_ids: s.owner_token_ids,
+                token_ids: s.token_ids
+              }
+            ]
+          );
+        return [
+          ret2[0],
+          {
+            ...s,
+            ledger: ret2[1].ledger,
+            metadata: ret2[1].metadata,
+            token_metadata: ret2[1].token_metadata,
+            operators: ret2[1].operators,
+            owner_token_ids: ret2[1].owner_token_ids,
+            token_ids: ret2[1].token_ids
+          }
+        ]
       }
-     });
+    }
+  );
 ```
 
 Change the initial storage to
@@ -213,7 +298,7 @@ const default_storage =
 Compile again and deploy to ghostnet
 
 ```bash
-TAQ_LIGO_IMAGE=ligolang/ligo:0.57.0 taq compile nft.jsligo
+TAQ_LIGO_IMAGE=ligolang/ligo:0.64.2 taq compile nft.jsligo
 taq deploy nft.tz -e "testing"
 ```
 
@@ -221,7 +306,7 @@ taq deploy nft.tz -e "testing"
 ┌──────────┬──────────────────────────────────────┬───────┬──────────────────┬────────────────────────────────┐
 │ Contract │ Address                              │ Alias │ Balance In Mutez │ Destination                    │
 ├──────────┼──────────────────────────────────────┼───────┼──────────────────┼────────────────────────────────┤
-│ nft.tz   │ KT1ExUVXDmRSk42vJDi37fQdKCDEPS9m2DoB │ nft   │ 0                │ https://ghostnet.ecadinfra.com │
+│ nft.tz   │ KT1QfMdyRq56xLBiofFTjLhkq5VCdj9PwC25 │ nft   │ 0                │ https://ghostnet.ecadinfra.com │
 └──────────┴──────────────────────────────────────┴───────┴──────────────────┴────────────────────────────────┘
 ```
 
@@ -280,12 +365,6 @@ const refreshUserContextOnPageReload = async () => {
 
   console.log("refreshUserContext ended.");
 };
-```
-
-Don't forget the import
-
-```typescript
-import { nat } from "./type-aliases";
 ```
 
 ## Update in `MintPage.tsx`
