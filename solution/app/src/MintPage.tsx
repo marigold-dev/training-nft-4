@@ -26,11 +26,11 @@ import { BigNumber } from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
-import SwipeableViews from "react-swipeable-views";
 import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
 import { address, bytes, nat } from "./type-aliases";
+import SwipeableViews from "react-swipeable-views-react-18-fix";
 
 export default function MintPage() {
   const {
@@ -109,11 +109,11 @@ export default function MintPage() {
         const requestHeaders: HeadersInit = new Headers();
         requestHeaders.set(
           "pinata_api_key",
-          `${process.env.REACT_APP_PINATA_API_KEY}`
+          `${import.meta.env.VITE_PINATA_API_KEY}`
         );
         requestHeaders.set(
           "pinata_secret_api_key",
-          `${process.env.REACT_APP_PINATA_API_SECRET}`
+          `${ import.meta.env.VITE_PINATA_API_SECRET}`
         );
 
         const resFile = await fetch(
