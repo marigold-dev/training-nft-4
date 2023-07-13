@@ -15,42 +15,42 @@
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1683104286459": {
+        "@taqueria/plugin-taquito.deploy.1685002144713": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1683104286459,
+            "time": 1685002144713,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1J9QpWT8awyYiFJSpEWqZtVYWKVrbm1idY",
+                    "address": "KT1Vcha6szsA3sRpeyszPJ8bzHQYigdS7NR3",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1683105424960": {
+        "@taqueria/plugin-taquito.deploy.1687447537616": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1683105424960,
+            "time": 1687447537616,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1SYqk9tAhgExhLawfvwc3ZCfGNzYjwi38n",
+                    "address": "KT1SnJEjHGeMvUYUDBdVKqzLv1i87DACesuQ",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
                 }
             ]
         },
-        "@taqueria/plugin-taquito.deploy.1683107359001": {
+        "@taqueria/plugin-taquito.deploy.1689250781383": {
             "task": "deploy",
             "plugin": "@taqueria/plugin-taquito",
-            "time": 1683107359001,
+            "time": 1689250781383,
             "output": [
                 {
                     "contract": "nft.tz",
-                    "address": "KT1QfMdyRq56xLBiofFTjLhkq5VCdj9PwC25",
+                    "address": "KT1BHzUpJwtDTtutVwM96bCGSe5nKL5FsV53",
                     "alias": "nft",
                     "balanceInMutez": "0",
                     "destination": "https://ghostnet.ecadinfra.com"
