@@ -128,11 +128,11 @@ You also need to update `sell` function
 const sell = (token_id : nat, quantity: nat, price: nat, s: storage) : ret => {
 
   //check balance of seller
-  const sellerBalance = MULTIASSET.Ledger.get_for_user(s.ledger,Tezos.get_source(),token_id);
+  const sellerBalance = MULTIASSET.Ledger.get_for_user([s.ledger,Tezos.get_source(),token_id]);
   if(quantity > sellerBalance) return failwith("2");
 
   //need to allow the contract itself to be an operator on behalf of the seller
-  const newOperators = MULTIASSET.Operators.add_operator(s.operators,Tezos.get_source(),Tezos.get_self_address(),token_id);
+  const newOperators = MULTIASSET.Operators.add_operator([s.operators,Tezos.get_source(),Tezos.get_self_address(),token_id]);
 
   //DECISION CHOICE: if offer already exists, we just override it
   return [list([]) as list<operation>,{...s,offers:Map.add([Tezos.get_source(),token_id],{quantity : quantity, price : price},s.offers),operators:newOperators}];
@@ -156,8 +156,8 @@ const buy = (token_id : nat, quantity: nat, seller: address, s: storage) : ret =
       const op = Tezos.transaction(unit,offer.price  * (1 as mutez),Tezos.get_contract_with_error(seller,"6"));
 
       //transfer tokens from seller to buyer
-      let ledger = MULTIASSET.Ledger.decrease_token_amount_for_user(s.ledger,seller,token_id,quantity);
-      ledger = MULTIASSET.Ledger.increase_token_amount_for_user(ledger,Tezos.get_source(),token_id,quantity);
+      let ledger = MULTIASSET.Ledger.decrease_token_amount_for_user([s.ledger,seller,token_id,quantity]);
+      ledger = MULTIASSET.Ledger.increase_token_amount_for_user([ledger,Tezos.get_source(),token_id,quantity]);
 
       //update new offer
       const newOffer = {...offer,quantity : abs(offer.quantity - quantity)};
