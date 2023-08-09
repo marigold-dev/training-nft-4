@@ -1,21 +1,21 @@
-## :round_pushpin: [See Github version and full code here](https://github.com/marigold-dev/training-nft-4)
+## :round_pushpin: [See Github version and full code here](https://github.com/marigold-dev/training-nft-3)
 
-# training-nft-4
+# training-nft-3
 
-Training n°4 for NFT marketplace
+Training n°3 for NFT marketplace
 
-![https://france-vins.eu/wp-content/uploads/2018/10/les-meilleures-caves-%C3%A0-vin-image.jpg](https://france-vins.eu/wp-content/uploads/2018/10/les-meilleures-caves-%C3%A0-vin-image.jpg)
+![https://vinepair.com/wp-content/uploads/2016/06/Cellar-HEAD.jpg](https://vinepair.com/wp-content/uploads/2016/06/Cellar-HEAD.jpg)
 
-We finish by using multi asset template.
+This time we are going to use the single asset template. It is a bit the contrary of the previous NFT template because:
 
-- you have unlimited NFT collections
-- you have unlimited quantity of items in each collection
+- you have a unique `token_id`, so only 1 wine collection
+- you have a quantity of items into the same collection
 
-To resume, you are producing any quantity of wine bottles on `n` collections
+To resume, you are producting wine bottles from same collection with `n` quantity.
 
 # :arrow_forward: Go forward
 
-Keep your code from previous training or get the solution [here](https://github.com/marigold-dev/training-nft-3/tree/main/solution)
+Keep your code from previous training or get the solution [here](https://github.com/marigold-dev/training-nft-2/tree/main/solution)
 
 > If you clone/fork a repo, rebuild in local
 
@@ -30,45 +30,52 @@ cd ..
 
 ## Do breaking changes on nft template to fit with the new library
 
-Point to the new template changing the first import line of `nft.jsligo` file to
+Point to the new template changing the first import line of your `nft.jsligo` file to
 
 ```ligolang
-#import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
+#import "@ligo/fa/lib/fa2/asset/single_asset.mligo" "SINGLEASSET"
 ```
 
-It means you will change the namespace from `SINGLEASSET` to `MULTIASSET` everywhere _(like this you are sure to use the correct library)_
+> Important ! It means you will change the namespace from `NFT` to `SINGLEASSET` everywhere (like this you are sure to use the correct library)
 
-You will re-introduce the `token_id` as there is several collections now.
-
-We can remove `totalSupply` and add two extra key sets `owner_token_ids` and `token_ids`
-
-Change the `storage` definition
+Change the `offer` and `storage` definitions
 
 ```ligolang
 type offer = {
-  quantity: nat,
-  price: nat
+  quantity : nat,
+  price : nat
 };
 
-type storage = {
-  administrators: set<address>,
-  offers: map<[address, nat], offer>, //user sells an offer for a token_id
-  ledger: MULTIASSET.Ledger.t,
-  metadata: MULTIASSET.Metadata.t,
-  token_metadata: MULTIASSET.TokenMetadata.t,
-  operators: MULTIASSET.Operators.t,
-  owner_token_ids: set<[MULTIASSET.owner, MULTIASSET.token_id]>,
-  token_ids: set<MULTIASSET.token_id>
-};
+type storage =
+  {
+    administrators: set<address>,
+    totalSupply: nat,
+    offers: map<address,offer>,  //user sells an offer
+    ledger: SINGLEASSET.Ledger.t,
+    metadata: SINGLEASSET.Metadata.t,
+    token_metadata: SINGLEASSET.TokenMetadata.t,
+    operators: SINGLEASSET.Operators.t,
+    owners: set<SINGLEASSET.Storage.owner>
+  };
 ```
 
-Update `mint` function
+Explanations:
+
+- `offers` is now a `map<address,offer>`, because you don't have to store `token_id` as key, now the key is the owner address. Each owner can sell a part of the unique collection
+- `offer` requires a quantity, each owner will sell a part of the unique collection
+- `totalSupply` is set at mint time in order to track the global quantity of minted items on the collection. It avoids to recalculate all the time the quantity from each owner holdings (this value is constant)
+- Because the ledger is made of `big_map` of key `owners`, we cache the keys to be able to loop on it
+- Since we have a unique collection, we remove `token_ids`. `token_id` will be set to `0`
+
+- Replace all `token_ids` fields by `owners` field on the file `nft.jsligo`
+
+Edit the `mint` function to add the `quantity` extra param, and finally change the `return`
 
 ```ligolang
 @entry
 const mint = (
-  [token_id, quantity, name, description, symbol, ipfsUrl]
-    : [nat, nat, bytes, bytes, bytes, bytes],
+  [quantity, name, description, symbol, ipfsUrl]
+    : [nat, bytes, bytes, bytes, bytes],
   s: storage
 ): ret => {
   if (quantity <= (0 as nat)) return failwith("0");
@@ -90,42 +97,44 @@ const mint = (
     list([]) as list<operation>,
     {
       ...s,
-      ledger: Big_map.add(
-        [Tezos.get_sender(), token_id],
-        quantity as nat,
-        s.ledger
-      ) as MULTIASSET.Ledger.t,
+      totalSupply: quantity,
+      ledger: Big_map.literal(list([[Tezos.get_sender(), quantity as nat]])) as
+        SINGLEASSET.Ledger.t,
       token_metadata: Big_map.add(
-        token_id,
-        { token_id: token_id, token_info: token_info },
+        0 as nat,
+        { token_id: 0 as nat, token_info: token_info },
         s.token_metadata
       ),
-      operators: Big_map.empty as MULTIASSET.Operators.t,
-      owner_token_ids: Set.add(
-        [Tezos.get_sender(), token_id],
-        s.owner_token_ids
-      ),
-      token_ids: Set.add(token_id, s.token_ids)
+      operators: Big_map.empty as SINGLEASSET.Operators.t,
+      owners: Set.add(Tezos.get_sender(), s.owners)
     }
   ]
 };
 ```
 
-You also need to update `sell` function
+Edit the `sell` function to replace `token_id` by `quantity`, we add/override an offer for the user
 
 ```ligolang
 @entry
-const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => {
+const sell = ([quantity, price]: [nat, nat], s: storage): ret => {
   //check balance of seller
 
   const sellerBalance =
-    MULTIASSET.Ledger.get_for_user([s.ledger, Tezos.get_source(), token_id]);
+    SINGLEASSET.Storage.get_amount_for_owner(
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        operators: s.operators,
+        token_metadata: s.token_metadata,
+        owners: s.owners
+      }
+    )(Tezos.get_source());
   if (quantity > sellerBalance) return failwith("2");
   //need to allow the contract itself to be an operator on behalf of the seller
 
   const newOperators =
-    MULTIASSET.Operators.add_operator(
-      [s.operators, Tezos.get_source(), Tezos.get_self_address(), token_id]
+    SINGLEASSET.Operators.add_operator(s.operators)(Tezos.get_source())(
+      Tezos.get_self_address()
     );
   //DECISION CHOICE: if offer already exists, we just override it
 
@@ -134,7 +143,7 @@ const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => 
     {
       ...s,
       offers: Map.add(
-        [Tezos.get_source(), token_id],
+        Tezos.get_source(),
         { quantity: quantity, price: price },
         s.offers
       ),
@@ -144,21 +153,24 @@ const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => 
 };
 ```
 
-Same for the `buy` function
+Also edit the `buy` function to replace `token_id` by `quantity`, check quantities, check final price is enough and update the current offer
 
 ```ligolang
 @entry
-const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret => {
+const buy = ([quantity, seller]: [nat, address], s: storage): ret => {
   //search for the offer
 
   return match(
-    Map.find_opt([seller, token_id], s.offers),
+    Map.find_opt(seller, s.offers),
     {
       None: () => failwith("3"),
       Some: (offer: offer) => {
+        //check if quantity is enough
+
+        if (quantity > offer.quantity) return failwith("4");
         //check if amount have been paid enough
 
-        if (Tezos.get_amount() < offer.price * (1 as mutez)) return failwith(
+        if (Tezos.get_amount() < (offer.price * quantity) * (1 as mutez)) return failwith(
           "5"
         );
         // prepare transfer of XTZ to seller
@@ -166,19 +178,19 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
         const op =
           Tezos.transaction(
             unit,
-            offer.price * (1 as mutez),
+            (offer.price * quantity) * (1 as mutez),
             Tezos.get_contract_with_error(seller, "6")
           );
         //transfer tokens from seller to buyer
 
         let ledger =
-          MULTIASSET.Ledger.decrease_token_amount_for_user(
-            [s.ledger, seller, token_id, quantity]
+          SINGLEASSET.Ledger.decrease_token_amount_for_user(s.ledger)(seller)(
+            quantity
           );
         ledger =
-          MULTIASSET.Ledger.increase_token_amount_for_user(
-            [ledger, Tezos.get_source(), token_id, quantity]
-          );
+          SINGLEASSET.Ledger.increase_token_amount_for_user(ledger)(
+            Tezos.get_source()
+          )(quantity);
         //update new offer
 
         const newOffer = { ...offer, quantity: abs(offer.quantity - quantity) };
@@ -186,12 +198,9 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
           list([op]) as list<operation>,
           {
             ...s,
-            offers: Map.update([seller, token_id], Some(newOffer), s.offers),
+            offers: Map.update(seller, Some(newOffer), s.offers),
             ledger: ledger,
-            owner_token_ids: Set.add(
-              [Tezos.get_source(), token_id],
-              s.owner_token_ids
-            )
+            owners: Set.add(Tezos.get_source(), s.owners)
           }
         ]
       }
@@ -200,12 +209,7 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
 };
 ```
 
-On `transfer,balance_of and update_ops` functions, change :
-
-- `owners: s.owners` by `owner_token_ids: s.owner_token_ids,token_ids: s.token_ids`
-- `owners: ret2[1].owners` by `owner_token_ids: ret2[1].owner_token_ids,token_ids: ret2[1].token_ids`
-
-Change the initial storage to
+Edit the storage file `nft.storageList.jsligo` as it. (:warning: you can change the `administrator` address to your own address or keep `alice`)
 
 ```ligolang
 #include "nft.jsligo"
@@ -214,8 +218,9 @@ const default_storage =
         administrators: Set.literal(
             list(["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address])
         ) as set<address>,
-        offers: Map.empty as map<[address, nat], offer>,
-        ledger: Big_map.empty as MULTIASSET.Ledger.t,
+        totalSupply: 0 as nat,
+        offers: Map.empty as map<address, offer>,
+        ledger: Big_map.empty as SINGLEASSET.Ledger.t,
         metadata: Big_map.literal(
             list(
                 [
@@ -240,19 +245,17 @@ const default_storage =
                     ]
                 ]
             )
-        ) as MULTIASSET.Metadata.t,
-        token_metadata: Big_map.empty as MULTIASSET.TokenMetadata.t,
-        operators: Big_map.empty as MULTIASSET.Operators.t,
-        owner_token_ids: Set.empty as
-            set<[MULTIASSET.owner, MULTIASSET.token_id]>,
-        token_ids: Set.empty as set<MULTIASSET.token_id>
+        ) as SINGLEASSET.Metadata.t,
+        token_metadata: Big_map.empty as SINGLEASSET.TokenMetadata.t,
+        operators: Big_map.empty as SINGLEASSET.Operators.t,
+        owners: Set.empty as set<SINGLEASSET.Storage.owner>
     };
 ```
 
-Compile again and deploy to ghostnet
+Compile again and deploy to ghostnet.
 
 ```bash
-TAQ_LIGO_IMAGE=ligolang/ligo:0.71.1 taq compile nft.jsligo
+TAQ_LIGO_IMAGE=ligolang/ligo:0.71.0 taq compile nft.jsligo
 taq deploy nft.tz -e "testing"
 ```
 
@@ -260,11 +263,11 @@ taq deploy nft.tz -e "testing"
 ┌──────────┬──────────────────────────────────────┬───────┬──────────────────┬────────────────────────────────┐
 │ Contract │ Address                              │ Alias │ Balance In Mutez │ Destination                    │
 ├──────────┼──────────────────────────────────────┼───────┼──────────────────┼────────────────────────────────┤
-│ nft.tz   │ KT1LwiszjMiEXasgtuHLswaMjUUdm5ARBmvk │ nft   │ 0                │ https://ghostnet.ecadinfra.com │
+│ nft.tz   │ KT1QAV6tJ4ZVSDSF6WqCr4qRD7a33DY3iDpj │ nft   │ 0                │ https://ghostnet.ecadinfra.com │
 └──────────┴──────────────────────────────────────┴───────┴──────────────────┴────────────────────────────────┘
 ```
 
-**:tada: Hooray ! We have finished the smart contract _(backend)_ :tada:**
+:tada: Hooray! We finished the smart contract _(backend)_ :tada:
 
 # :performing_arts: NFT Marketplace front
 
@@ -279,8 +282,8 @@ yarn dev
 
 ## Update in `App.tsx`
 
-We forget about `token_id == 0` and fetch back all tokens.
-Replace the function `refreshUserContextOnPageReload` by the following content
+We just need to fetch the token_id == 0.
+Replace the function `refreshUserContextOnPageReload` by
 
 ```typescript
 const refreshUserContextOnPageReload = async () => {
@@ -294,15 +297,18 @@ const refreshUserContextOnPageReload = async () => {
       nftContractAddress
     );
     const storage = (await nftContrat.storage()) as Storage;
-    await Promise.all(
-      storage.token_ids.map(async (token_id: nat) => {
-        let tokenMetadata: TZIP21TokenMetadata = (await c
-          .tzip12()
-          .getTokenMetadata(token_id.toNumber())) as TZIP21TokenMetadata;
-        nftContratTokenMetadataMap.set(token_id.toNumber(), tokenMetadata);
-      })
-    );
-    setNftContratTokenMetadataMap(new Map(nftContratTokenMetadataMap)); //new Map to force refresh
+
+    try {
+      let tokenMetadata: TZIP21TokenMetadata = (await c
+        .tzip12()
+        .getTokenMetadata(0)) as TZIP21TokenMetadata;
+      nftContratTokenMetadataMap.set(0, tokenMetadata);
+
+      setNftContratTokenMetadataMap(new Map(nftContratTokenMetadataMap)); //new Map to force refresh
+    } catch (error) {
+      console.log("error refreshing nftContratTokenMetadataMap: ");
+    }
+
     setNftContrat(nftContrat);
     setStorage(storage);
   } catch (error) {
@@ -323,18 +329,11 @@ const refreshUserContextOnPageReload = async () => {
 
 ## Update in `MintPage.tsx`
 
-Just update the `mint` call adding the missing quantity, and add back the `token_id` counter incrementer
+We introduce the quantity and remove the `token_id` variable. Replace the full file by the following content:
 
 ```typescript
-import {
-  AddCircleOutlined,
-  Close,
-  KeyboardArrowLeft,
-  KeyboardArrowRight,
-} from "@mui/icons-material";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import {
-  Box,
   Button,
   CardHeader,
   CardMedia,
@@ -345,28 +344,35 @@ import {
   Toolbar,
   useMediaQuery,
 } from "@mui/material";
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
-import SwipeableViews from "react-swipeable-views";
-import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
-import { address, bytes, nat } from "./type-aliases";
 
+import {
+  AddCircleOutlined,
+  Close,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from "@mui/icons-material";
+import { char2Bytes } from "@taquito/utils";
+import { useFormik } from "formik";
+import SwipeableViews from "react-swipeable-views";
+import * as yup from "yup";
+import { address, bytes, nat } from "./type-aliases";
 export default function MintPage() {
   const {
     userAddress,
+    storage,
     nftContrat,
     refreshUserContextOnPageReload,
     nftContratTokenMetadataMap,
-    storage,
   } = React.useContext(UserContext) as UserContextType;
   const { enqueueSnackbar } = useSnackbar();
   const [pictureUrl, setPictureUrl] = useState<string>("");
@@ -385,7 +391,6 @@ export default function MintPage() {
   const handleStepChange = (step: number) => {
     setActiveStep(step);
   };
-
   const validationSchema = yup.object({
     name: yup.string().required("Name is required"),
     description: yup.string().required("Description is required"),
@@ -416,14 +421,6 @@ export default function MintPage() {
       setFormOpen(false);
     else setFormOpen(true);
   }, [userAddress]);
-
-  useEffect(() => {
-    (async () => {
-      if (storage && storage.token_ids.length > 0) {
-        formik.setFieldValue("token_id", storage?.token_ids.length);
-      }
-    })();
-  }, [storage?.token_ids]);
 
   const mint = async (
     newTokenDefinition: TZIP21TokenMetadata & { quantity: number }
@@ -463,7 +460,6 @@ export default function MintPage() {
 
         const op = await nftContrat!.methods
           .mint(
-            new BigNumber(newTokenDefinition.token_id) as nat,
             new BigNumber(newTokenDefinition.quantity) as nat,
             char2Bytes(newTokenDefinition.name!) as bytes,
             char2Bytes(newTokenDefinition.description!) as bytes,
@@ -767,7 +763,7 @@ export default function MintPage() {
 
 ## Update in `OffersPage.tsx`
 
-Copy the content below, and paste it to `OffersPage.tsx`
+We introduce the quantity and remove the `token_id` variable. Replace the full file by the following content:
 
 ```typescript
 import { InfoOutlined } from "@mui/icons-material";
@@ -822,12 +818,8 @@ export default function OffersPage() {
   const [selectedTokenId, setSelectedTokenId] = React.useState<number>(0);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(1);
 
-  let [offersTokenIDMap, setOffersTokenIDMap] = React.useState<Map<nat, Offer>>(
-    new Map()
-  );
-  let [ledgerTokenIDMap, setLedgerTokenIDMap] = React.useState<Map<nat, nat>>(
-    new Map()
-  );
+  let [ownerOffers, setOwnerOffers] = React.useState<Offer | null>(null);
+  let [ownerBalance, setOwnerBalance] = React.useState<number>(0);
 
   const {
     nftContrat,
@@ -858,30 +850,25 @@ export default function OffersPage() {
   const initPage = async () => {
     if (storage) {
       console.log("context is not empty, init page now");
-      ledgerTokenIDMap = new Map();
-      offersTokenIDMap = new Map();
 
       await Promise.all(
-        storage.owner_token_ids.map(async (element) => {
-          if (element[0] === userAddress) {
-            const ownerBalance = await storage.ledger.get({
-              0: userAddress as address,
-              1: element[1],
-            });
-            if (ownerBalance != BigNumber(0))
-              ledgerTokenIDMap.set(element[1], ownerBalance);
-            const ownerOffers = await storage.offers.get({
-              0: userAddress as address,
-              1: element[1],
-            });
+        storage.owners.map(async (owner) => {
+          if (owner === userAddress) {
+            const ownerBalance = await storage.ledger.get(
+              userAddress as address
+            );
+            setOwnerBalance(ownerBalance.toNumber());
+            const ownerOffers = await storage.offers.get(
+              userAddress as address
+            );
             if (ownerOffers && ownerOffers.quantity != BigNumber(0))
-              offersTokenIDMap.set(element[1], ownerOffers);
+              setOwnerOffers(ownerOffers!);
 
             console.log(
               "found for " +
-                element[0] +
+                owner +
                 " on token_id " +
-                element[1] +
+                0 +
                 " with balance " +
                 ownerBalance
             );
@@ -890,10 +877,6 @@ export default function OffersPage() {
           }
         })
       );
-      setLedgerTokenIDMap(new Map(ledgerTokenIDMap)); //force refresh
-      setOffersTokenIDMap(new Map(offersTokenIDMap)); //force refresh
-
-      console.log("ledgerTokenIDMap", ledgerTokenIDMap);
     } else {
       console.log("context is empty, wait for parent and retry ...");
     }
@@ -917,7 +900,6 @@ export default function OffersPage() {
     try {
       const op = await nftContrat?.methods
         .sell(
-          BigNumber(token_id) as nat,
           BigNumber(quantity) as nat,
           BigNumber(price * 1000000) as nat //to mutez
         )
@@ -950,20 +932,17 @@ export default function OffersPage() {
 
   const isDesktop = useMediaQuery("(min-width:1100px)");
   const isTablet = useMediaQuery("(min-width:600px)");
-
   return (
     <Paper>
       <Typography style={{ paddingBottom: "10px" }} variant="h5">
         Sell my bottles
       </Typography>
-      {ledgerTokenIDMap && ledgerTokenIDMap.size != 0 ? (
+      {ownerBalance != 0 ? (
         <Fragment>
           <Pagination
             page={currentPageIndex}
             onChange={(_, value) => setCurrentPageIndex(value)}
-            count={Math.ceil(
-              Array.from(ledgerTokenIDMap.entries()).length / itemPerPage
-            )}
+            count={Math.ceil(1 / itemPerPage)}
             showFirstButton
             showLastButton
           />
@@ -971,150 +950,127 @@ export default function OffersPage() {
           <ImageList
             cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
           >
-            {Array.from(ledgerTokenIDMap.entries())
-              .filter((_, index) =>
-                index >= currentPageIndex * itemPerPage - itemPerPage &&
-                index < currentPageIndex * itemPerPage
-                  ? true
-                  : false
-              )
-              .map(([token_id, balance]) => (
-                <Card key={token_id + "-" + token_id.toString()}>
-                  <CardHeader
-                    avatar={
-                      <Tooltip
-                        title={
-                          <Box>
-                            <Typography>
-                              {" "}
-                              {"ID : " + token_id.toString()}{" "}
-                            </Typography>
-                            <Typography>
-                              {"Description : " +
-                                nftContratTokenMetadataMap.get(
-                                  token_id.toNumber()
-                                )?.description}
-                            </Typography>
-                          </Box>
-                        }
-                      >
-                        <InfoOutlined />
-                      </Tooltip>
-                    }
+            <Card key={userAddress + "-" + 0}>
+              <CardHeader
+                avatar={
+                  <Tooltip
                     title={
-                      nftContratTokenMetadataMap.get(token_id.toNumber())?.name
-                    }
-                  />
-                  <CardMedia
-                    sx={{ width: "auto", marginLeft: "33%" }}
-                    component="img"
-                    height="100px"
-                    image={nftContratTokenMetadataMap
-                      .get(token_id.toNumber())
-                      ?.thumbnailUri?.replace(
-                        "ipfs://",
-                        "https://gateway.pinata.cloud/ipfs/"
-                      )}
-                  />
-
-                  <CardContent>
-                    <Box>
-                      <Typography variant="body2">
-                        {"Owned : " + balance.toNumber()}
-                      </Typography>
-                      <Typography variant="body2">
-                        {offersTokenIDMap.get(token_id)
-                          ? "Traded : " +
-                            offersTokenIDMap.get(token_id)?.quantity +
-                            " (price : " +
-                            offersTokenIDMap
-                              .get(token_id)
-                              ?.price.dividedBy(1000000) +
-                            " Tz/b)"
-                          : ""}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-
-                  <CardActions>
-                    {!userAddress ? (
-                      <Box marginLeft="5vw">
-                        <ConnectButton
-                          Tezos={Tezos}
-                          nftContratTokenMetadataMap={
-                            nftContratTokenMetadataMap
-                          }
-                          setUserAddress={setUserAddress}
-                          setUserBalance={setUserBalance}
-                          wallet={wallet}
-                        />
+                      <Box>
+                        <Typography>{"ID : " + 0}</Typography>
+                        <Typography>
+                          {"Description : " +
+                            nftContratTokenMetadataMap.get(0)?.description}
+                        </Typography>
                       </Box>
-                    ) : (
-                      <form
-                        style={{ width: "100%" }}
-                        onSubmit={(values) => {
-                          setSelectedTokenId(token_id.toNumber());
-                          formik.handleSubmit(values);
+                    }
+                  >
+                    <InfoOutlined />
+                  </Tooltip>
+                }
+                title={nftContratTokenMetadataMap.get(0)?.name}
+              />
+              <CardMedia
+                sx={{ width: "auto", marginLeft: "33%" }}
+                component="img"
+                height="100px"
+                image={nftContratTokenMetadataMap
+                  .get(0)
+                  ?.thumbnailUri?.replace(
+                    "ipfs://",
+                    "https://gateway.pinata.cloud/ipfs/"
+                  )}
+              />
+
+              <CardContent>
+                <Box>
+                  <Typography variant="body2">
+                    {"Owned : " + ownerBalance}
+                  </Typography>
+                  <Typography variant="body2">
+                    {ownerOffers
+                      ? "Traded : " +
+                        ownerOffers?.quantity +
+                        " (price : " +
+                        ownerOffers?.price.dividedBy(1000000) +
+                        " Tz/b)"
+                      : ""}
+                  </Typography>
+                </Box>
+              </CardContent>
+
+              <CardActions>
+                {!userAddress ? (
+                  <Box marginLeft="5vw">
+                    <ConnectButton
+                      Tezos={Tezos}
+                      nftContratTokenMetadataMap={nftContratTokenMetadataMap}
+                      setUserAddress={setUserAddress}
+                      setUserBalance={setUserBalance}
+                      wallet={wallet}
+                    />
+                  </Box>
+                ) : (
+                  <form
+                    style={{ width: "100%" }}
+                    onSubmit={(values) => {
+                      setSelectedTokenId(0);
+                      formik.handleSubmit(values);
+                    }}
+                  >
+                    <span>
+                      <TextField
+                        type="number"
+                        sx={{ width: "40%" }}
+                        name="price"
+                        label="price/bottle"
+                        placeholder="Enter a price"
+                        variant="filled"
+                        value={formik.values.price}
+                        onChange={formik.handleChange}
+                        error={
+                          formik.touched.price && Boolean(formik.errors.price)
+                        }
+                        helperText={formik.touched.price && formik.errors.price}
+                      />
+                      <TextField
+                        sx={{
+                          width: "60%",
+                          bottom: 0,
+                          position: "relative",
                         }}
-                      >
-                        <span>
-                          <TextField
-                            type="number"
-                            sx={{ width: "40%" }}
-                            name="price"
-                            label="price/bottle"
-                            placeholder="Enter a price"
-                            variant="filled"
-                            value={formik.values.price}
-                            onChange={formik.handleChange}
-                            error={
-                              formik.touched.price &&
-                              Boolean(formik.errors.price)
-                            }
-                            helperText={
-                              formik.touched.price && formik.errors.price
-                            }
-                          />
-                          <TextField
-                            sx={{
-                              width: "60%",
-                              bottom: 0,
-                              position: "relative",
-                            }}
-                            type="number"
-                            label="quantity"
-                            name="quantity"
-                            placeholder="Enter a quantity"
-                            variant="filled"
-                            value={formik.values.quantity}
-                            onChange={formik.handleChange}
-                            error={
-                              formik.touched.quantity &&
-                              Boolean(formik.errors.quantity)
-                            }
-                            helperText={
-                              formik.touched.quantity && formik.errors.quantity
-                            }
-                            InputProps={{
-                              inputProps: { min: 0, max: balance.toNumber() },
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <Button
-                                    type="submit"
-                                    aria-label="add to favorites"
-                                  >
-                                    <SellIcon /> Sell
-                                  </Button>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        </span>
-                      </form>
-                    )}
-                  </CardActions>
-                </Card>
-              ))}{" "}
+                        type="number"
+                        label="quantity"
+                        name="quantity"
+                        placeholder="Enter a quantity"
+                        variant="filled"
+                        value={formik.values.quantity}
+                        onChange={formik.handleChange}
+                        error={
+                          formik.touched.quantity &&
+                          Boolean(formik.errors.quantity)
+                        }
+                        helperText={
+                          formik.touched.quantity && formik.errors.quantity
+                        }
+                        InputProps={{
+                          inputProps: { min: 0, max: ownerBalance },
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Button
+                                type="submit"
+                                aria-label="add to favorites"
+                              >
+                                <SellIcon /> Sell
+                              </Button>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </span>
+                  </form>
+                )}
+              </CardActions>
+            </Card>
           </ImageList>
         </Fragment>
       ) : (
@@ -1129,13 +1085,12 @@ export default function OffersPage() {
 
 ## Update in `WineCataloguePage.tsx`
 
-Copy the content below, and paste it to `WineCataloguePage.tsx`
+We introduce the quantity and remove the `token_id` variable. Replace the full file by the following content:
 
 ```typescript
 import { InfoOutlined } from "@mui/icons-material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import {
-  Box,
   Button,
   Card,
   CardActions,
@@ -1147,11 +1102,11 @@ import {
   Pagination,
   TextField,
   Tooltip,
+  Typography,
   useMediaQuery,
 } from "@mui/material";
+import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-
 import BigNumber from "bignumber.js";
 import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
@@ -1164,7 +1119,7 @@ import { address, nat } from "./type-aliases";
 
 const itemPerPage: number = 6;
 
-type OfferEntry = [{ 0: address; 1: nat }, Offer];
+type OfferEntry = [address, Offer];
 
 type Offer = {
   price: nat;
@@ -1209,13 +1164,11 @@ export default function WineCataloguePage() {
   const buy = async (quantity: number, selectedOfferEntry: OfferEntry) => {
     try {
       const op = await nftContrat?.methods
-        .buy(
-          selectedOfferEntry[0][1],
-          BigNumber(quantity) as nat,
-          selectedOfferEntry[0][0]
-        )
+        .buy(BigNumber(quantity) as nat, selectedOfferEntry[0])
         .send({
-          amount: quantity * selectedOfferEntry[1].price.toNumber(),
+          amount:
+            selectedOfferEntry[1].quantity.toNumber() *
+            selectedOfferEntry[1].price.toNumber(),
           mutez: true,
         });
 
@@ -1245,6 +1198,7 @@ export default function WineCataloguePage() {
   };
   const isDesktop = useMediaQuery("(min-width:1100px)");
   const isTablet = useMediaQuery("(min-width:600px)");
+
   return (
     <Paper>
       <Typography style={{ paddingBottom: "10px" }} variant="h5">
@@ -1257,7 +1211,7 @@ export default function WineCataloguePage() {
             page={currentPageIndex}
             onChange={(_, value) => setCurrentPageIndex(value)}
             count={Math.ceil(
-              Array.from(storage?.offers.entries()).filter(([_, offer]) =>
+              Array.from(storage?.offers.entries()).filter(([key, offer]) =>
                 offer.quantity.isGreaterThan(0)
               ).length / itemPerPage
             )}
@@ -1269,46 +1223,39 @@ export default function WineCataloguePage() {
           >
             {Array.from(storage?.offers.entries())
               .filter(([_, offer]) => offer.quantity.isGreaterThan(0))
-              .filter((_, index) =>
+              .filter((owner, index) =>
                 index >= currentPageIndex * itemPerPage - itemPerPage &&
                 index < currentPageIndex * itemPerPage
                   ? true
                   : false
               )
-              .map(([key, offer]) => (
-                <Card key={key[0] + "-" + key[1].toString()}>
+              .map(([owner, offer]) => (
+                <Card key={owner}>
                   <CardHeader
                     avatar={
                       <Tooltip
                         title={
                           <Box>
-                            <Typography>
-                              {" "}
-                              {"ID : " + key[1].toString()}{" "}
-                            </Typography>
+                            <Typography>{"ID : " + 0}</Typography>
                             <Typography>
                               {"Description : " +
-                                nftContratTokenMetadataMap.get(
-                                  key[1].toNumber()
-                                )?.description}
+                                nftContratTokenMetadataMap.get(0)?.description}
                             </Typography>
-                            <Typography>{"Seller : " + key[0]} </Typography>
+                            <Typography>{"Seller : " + owner} </Typography>
                           </Box>
                         }
                       >
                         <InfoOutlined />
                       </Tooltip>
                     }
-                    title={
-                      nftContratTokenMetadataMap.get(key[1].toNumber())?.name
-                    }
+                    title={nftContratTokenMetadataMap.get(0)?.name}
                   />
                   <CardMedia
                     sx={{ width: "auto", marginLeft: "33%" }}
                     component="img"
                     height="100px"
                     image={nftContratTokenMetadataMap
-                      .get(key[1].toNumber())
+                      .get(0)
                       ?.thumbnailUri?.replace(
                         "ipfs://",
                         "https://gateway.pinata.cloud/ipfs/"
@@ -1318,7 +1265,6 @@ export default function WineCataloguePage() {
                   <CardContent>
                     <Box>
                       <Typography variant="body2">
-                        {" "}
                         {"Price : " +
                           offer.price.dividedBy(1000000) +
                           " XTZ/bottle"}
@@ -1346,7 +1292,7 @@ export default function WineCataloguePage() {
                       <form
                         style={{ width: "100%" }}
                         onSubmit={(values) => {
-                          setSelectedOfferEntry([key, offer]);
+                          setSelectedOfferEntry([owner, offer]);
                           formik.handleSubmit(values);
                         }}
                       >
@@ -1401,8 +1347,8 @@ export default function WineCataloguePage() {
 
 ## Let's play
 
-1. Connect with your wallet an choose `alice` account _(or one of the administrators you set on the smart contract earlier)_. You are redirected to the Administration/mint page as there is no NFT minted yet
-2. Create an asset, for example :
+1. Connect with your wallet an choose `alice` account (or one of the administrators you set on the smart contract earlier). You are redirected to the Administration/mint page as there is no minted NFT yet
+2. Create an asset, for example:
 
 - `name`: Saint Emilion - Franc la Rose
 - `symbol`: SEMIL
@@ -1414,25 +1360,25 @@ export default function WineCataloguePage() {
 
 ![minting.png](./doc/minting.png)
 
-Your picture will be pushed to IPFS and will be displayed, then your wallet will ask you to sign the `mint` operation.
+Your picture will be pushed to IPFS and be displayed, then your wallet will ask you to sign the `mint` operation.
 
 - Confirm operation
-- Wait less than 1 minute to get the confirmation notification, the page will be automatically refreshed
+- Wait less than 1 minute to get the confirmation notification, the page will be automatically refreshed.
 
 ![minted.png](./doc/minted.png)
 
-Now you can see the `Trading` menu and the `Bottle offers` sub-menu
+Now you can see the `Trading` menu and the `Bottle offers` sub menu
 
 Click on the sub-menu entry
 
-You are owner of this bottle so you can create an offer on it
+You are owner of this bottle so you can make an offer on it
 
 - Enter a quantity
 - Enter a price offer
 - Click on `SELL` button
-- Wait a bit for the confirmation, then once automatically refreshed you have an offer attached to your NFT!
+- Wait a bit for the confirmation, then once automatically refreshed you have an offer attached to your NFT
 
-![sell.png](./doc/sell.png)
+![offer.png](./doc/offer.png)
 
 For buying,
 
@@ -1440,15 +1386,17 @@ For buying,
 - The buyer will see that alice is selling some bottles from the unique collection
 - Buy some bottles while clicking on `BUY` button
 - Wait for the confirmation, then the offer is updated on the market _(depending how many bottle you bought)_
-- Click on `bottle offers` sub-menu
+- Click on `bottle offers` sub menu
 - You are now the owner of some bottles, you can resell a part of it at your own price, etc ...
 
 ![buy.png](./doc/buy.png)
 
-To add more collections, go to the Mint page and repeat the process.
-
 # :palm_tree: Conclusion :sun_with_face:
 
-You are able to play with an any NFT template from the ligo library.
+You are able to play with an unique NFT collection from the ligo library.
 
-Congratulations !
+On next training, you will use the last template `multi asset` that will allow multiple NFT collections on same contract
+
+[:arrow_right: NEXT (HTML version)](https://marigold-dev.github.io/training-nft-4)
+
+[:arrow_right: NEXT (Github version)](https://github.com/marigold-dev/training-nft-4)

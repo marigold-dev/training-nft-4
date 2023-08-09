@@ -1,12 +1,5 @@
-import {
-  AddCircleOutlined,
-  Close,
-  KeyboardArrowLeft,
-  KeyboardArrowRight,
-} from "@mui/icons-material";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import {
-  Box,
   Button,
   CardHeader,
   CardMedia,
@@ -17,28 +10,35 @@ import {
   Toolbar,
   useMediaQuery,
 } from "@mui/material";
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { char2Bytes } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { useFormik } from "formik";
 import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
-import SwipeableViews from "react-swipeable-views";
-import * as yup from "yup";
 import { TZIP21TokenMetadata, UserContext, UserContextType } from "./App";
 import { TransactionInvalidBeaconError } from "./TransactionInvalidBeaconError";
-import { address, bytes, nat } from "./type-aliases";
 
+import {
+  AddCircleOutlined,
+  Close,
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from "@mui/icons-material";
+import { char2Bytes } from "@taquito/utils";
+import { useFormik } from "formik";
+import SwipeableViews from "react-swipeable-views";
+import * as yup from "yup";
+import { address, bytes, nat } from "./type-aliases";
 export default function MintPage() {
   const {
     userAddress,
+    storage,
     nftContrat,
     refreshUserContextOnPageReload,
     nftContratTokenMetadataMap,
-    storage,
   } = React.useContext(UserContext) as UserContextType;
   const { enqueueSnackbar } = useSnackbar();
   const [pictureUrl, setPictureUrl] = useState<string>("");
@@ -57,7 +57,6 @@ export default function MintPage() {
   const handleStepChange = (step: number) => {
     setActiveStep(step);
   };
-
   const validationSchema = yup.object({
     name: yup.string().required("Name is required"),
     description: yup.string().required("Description is required"),
@@ -88,14 +87,6 @@ export default function MintPage() {
       setFormOpen(false);
     else setFormOpen(true);
   }, [userAddress]);
-
-  useEffect(() => {
-    (async () => {
-      if (storage && storage.token_ids.length > 0) {
-        formik.setFieldValue("token_id", storage?.token_ids.length);
-      }
-    })();
-  }, [storage?.token_ids]);
 
   const mint = async (
     newTokenDefinition: TZIP21TokenMetadata & { quantity: number }
@@ -135,7 +126,6 @@ export default function MintPage() {
 
         const op = await nftContrat!.methods
           .mint(
-            new BigNumber(newTokenDefinition.token_id) as nat,
             new BigNumber(newTokenDefinition.quantity) as nat,
             char2Bytes(newTokenDefinition.name!) as bytes,
             char2Bytes(newTokenDefinition.description!) as bytes,
