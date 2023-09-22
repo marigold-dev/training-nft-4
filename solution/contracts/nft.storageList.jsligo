@@ -1,10 +1,11 @@
-#include "nft.jsligo"
+#import "nft.jsligo" "Contract"
+#import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
 const default_storage =
     {
         administrators: Set.literal(
             list(["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address])
         ) as set<address>,
-        offers: Map.empty as map<[address, nat], offer>,
+        offers: Map.empty as map<[address, nat], Contract.offer>,
         ledger: Big_map.empty as MULTIASSET.Ledger.t,
         metadata: Big_map.literal(
             list(

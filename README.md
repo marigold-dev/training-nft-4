@@ -208,13 +208,14 @@ On `transfer,balance_of and update_ops` functions, change :
 Change the initial storage to
 
 ```ligolang
-#include "nft.jsligo"
+#import "nft.jsligo" "Contract"
+#import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
 const default_storage =
     {
         administrators: Set.literal(
             list(["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address])
         ) as set<address>,
-        offers: Map.empty as map<[address, nat], offer>,
+        offers: Map.empty as map<[address, nat], Contract.offer>,
         ledger: Big_map.empty as MULTIASSET.Ledger.t,
         metadata: Big_map.literal(
             list(
@@ -247,12 +248,13 @@ const default_storage =
             set<[MULTIASSET.owner, MULTIASSET.token_id]>,
         token_ids: Set.empty as set<MULTIASSET.token_id>
     };
+
 ```
 
 Compile again and deploy to ghostnet
 
 ```bash
-TAQ_LIGO_IMAGE=ligolang/ligo:0.71.1 taq compile nft.jsligo
+TAQ_LIGO_IMAGE=ligolang/ligo:0.73.0 taq compile nft.jsligo
 taq deploy nft.tz -e "testing"
 ```
 
