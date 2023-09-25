@@ -8,12 +8,10 @@ Training n°4 for NFT marketplace
 
 We finish by using multi asset template.
 
-- you have unlimited NFT collections
-- you have unlimited quantity of items in each collection
+- you have an unlimited number of NFT collections
+- you have an unlimited quantity of items in each collection
 
 To resume, you are producing any quantity of wine bottles on `n` collections
-
-# :arrow_forward: Go forward
 
 Keep your code from previous training or get the solution [here](https://github.com/marigold-dev/training-nft-3/tree/main/solution)
 
@@ -26,9 +24,7 @@ yarn install
 cd ..
 ```
 
-# :scroll: Smart contract
-
-## Do breaking changes on nft template to fit with the new library
+## Smart Contract
 
 Point to the new template changing the first import line of `nft.jsligo` file to
 
@@ -38,7 +34,7 @@ Point to the new template changing the first import line of `nft.jsligo` file to
 
 It means you will change the namespace from `SINGLEASSET` to `MULTIASSET` everywhere _(like this you are sure to use the correct library)_
 
-You will re-introduce the `token_id` as there is several collections now.
+You will re-introduce the `token_id` as there are several collections now.
 
 We can remove `totalSupply` and add two extra key sets `owner_token_ids` and `token_ids`
 
@@ -266,9 +262,9 @@ taq deploy nft.tz -e "testing"
 └──────────┴──────────────────────────────────────┴───────┴──────────────────┴────────────────────────────────┘
 ```
 
-**:tada: Hooray ! We have finished the smart contract _(backend)_ :tada:**
+**Hooray! We have finished the smart contract _(backend)_**
 
-# :performing_arts: NFT Marketplace front
+## :performing_arts: NFT Marketplace front
 
 Generate Typescript classes and go to the frontend to run the server
 
@@ -282,7 +278,7 @@ yarn dev
 ## Update in `App.tsx`
 
 We forget about `token_id == 0` and fetch back all tokens.
-Replace the function `refreshUserContextOnPageReload` by the following content
+Replace the function `refreshUserContextOnPageReload` with the following content
 
 ```typescript
 const refreshUserContextOnPageReload = async () => {
@@ -325,7 +321,7 @@ const refreshUserContextOnPageReload = async () => {
 
 ## Update in `MintPage.tsx`
 
-Just update the `mint` call adding the missing quantity, and add back the `token_id` counter incrementer
+Just update the `mint` call and add the missing quantity, and add back the `token_id` counter incrementer
 
 ```typescript
 import {
@@ -1403,7 +1399,7 @@ export default function WineCataloguePage() {
 
 ## Let's play
 
-1. Connect with your wallet an choose `alice` account _(or one of the administrators you set on the smart contract earlier)_. You are redirected to the Administration/mint page as there is no NFT minted yet
+1. Connect with your wallet and choose `alice` account _(or one of the administrators you set on the smart contract earlier)_. You are redirected to the Administration/mint page as there is no NFT minted yet
 2. Create an asset, for example :
 
 - `name`: Saint Emilion - Franc la Rose
@@ -1412,7 +1408,7 @@ export default function WineCataloguePage() {
 - `quantity`: 1000
 
 3. Click on `Upload an image` and select a bottle picture on your computer
-4. Click on Mint button
+4. Click on the Mint button
 
 ![minting.png](./doc/minting.png)
 
@@ -1427,7 +1423,7 @@ Now you can see the `Trading` menu and the `Bottle offers` sub-menu
 
 Click on the sub-menu entry
 
-You are owner of this bottle so you can create an offer on it
+You are the owner of this bottle so you can create an offer on it
 
 - Enter a quantity
 - Enter a price offer
@@ -1439,10 +1435,10 @@ You are owner of this bottle so you can create an offer on it
 For buying,
 
 - Disconnect from your user and connect with another account _(who has enough XTZ to buy at least 1 bottle)_
-- The buyer will see that alice is selling some bottles from the unique collection
-- Buy some bottles while clicking on `BUY` button
-- Wait for the confirmation, then the offer is updated on the market _(depending how many bottle you bought)_
-- Click on `bottle offers` sub-menu
+- The buyer will see that Alice is selling some bottles from the unique collection
+- Buy some bottles while clicking on the `BUY` button
+- Wait for the confirmation, then the offer is updated on the market _(depending on how many bottles you bought)_
+- Click on the `bottle offers` submenu
 - You are now the owner of some bottles, you can resell a part of it at your own price, etc ...
 
 ![buy.png](./doc/buy.png)
@@ -1451,6 +1447,6 @@ To add more collections, go to the Mint page and repeat the process.
 
 # :palm_tree: Conclusion :sun_with_face:
 
-You are able to play with an any NFT template from the ligo library.
+You are able to use any NFT template from the Ligo library.
 
-Congratulations !
+Congratulations!
