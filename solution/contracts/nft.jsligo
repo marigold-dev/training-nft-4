@@ -1,4 +1,5 @@
 #import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
+
 /* ERROR MAP FOR UI DISPLAY or TESTS
     const errorMap : map<string,string> = Map.literal(list([
       ["0", "Enter a positive and not null amount"],
@@ -11,12 +12,9 @@
     ]));
 */
 
-type offer = {
-  quantity: nat,
-  price: nat
-};
+export type offer = { quantity: nat, price: nat };
 
-type storage = {
+export type storage = {
   administrators: set<address>,
   offers: map<[address, nat], offer>, //user sells an offer for a token_id
   ledger: MULTIASSET.Ledger.t,
@@ -33,17 +31,15 @@ type ret = [list<operation>, storage];
 const transfer = (p: MULTIASSET.transfer, s: storage): ret => {
   const ret2: [list<operation>, MULTIASSET.storage] =
     MULTIASSET.transfer(
-      [
-        p,
-        {
-          ledger: s.ledger,
-          metadata: s.metadata,
-          token_metadata: s.token_metadata,
-          operators: s.operators,
-          owner_token_ids: s.owner_token_ids,
-          token_ids: s.token_ids
-        }
-      ]
+      p,
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        token_metadata: s.token_metadata,
+        operators: s.operators,
+        owner_token_ids: s.owner_token_ids,
+        token_ids: s.token_ids
+      }
     );
   return [
     ret2[0],
@@ -63,17 +59,15 @@ const transfer = (p: MULTIASSET.transfer, s: storage): ret => {
 const balance_of = (p: MULTIASSET.balance_of, s: storage): ret => {
   const ret2: [list<operation>, MULTIASSET.storage] =
     MULTIASSET.balance_of(
-      [
-        p,
-        {
-          ledger: s.ledger,
-          metadata: s.metadata,
-          token_metadata: s.token_metadata,
-          operators: s.operators,
-          owner_token_ids: s.owner_token_ids,
-          token_ids: s.token_ids
-        }
-      ]
+      p,
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        token_metadata: s.token_metadata,
+        operators: s.operators,
+        owner_token_ids: s.owner_token_ids,
+        token_ids: s.token_ids
+      }
     );
   return [
     ret2[0],
@@ -92,18 +86,16 @@ const balance_of = (p: MULTIASSET.balance_of, s: storage): ret => {
 @entry
 const update_operators = (p: MULTIASSET.update_operators, s: storage): ret => {
   const ret2: [list<operation>, MULTIASSET.storage] =
-    MULTIASSET.update_ops(
-      [
-        p,
-        {
-          ledger: s.ledger,
-          metadata: s.metadata,
-          token_metadata: s.token_metadata,
-          operators: s.operators,
-          owner_token_ids: s.owner_token_ids,
-          token_ids: s.token_ids
-        }
-      ]
+    MULTIASSET.update_operators(
+      p,
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        token_metadata: s.token_metadata,
+        operators: s.operators,
+        owner_token_ids: s.owner_token_ids,
+        token_ids: s.token_ids
+      }
     );
   return [
     ret2[0],
@@ -121,12 +113,18 @@ const update_operators = (p: MULTIASSET.update_operators, s: storage): ret => {
 
 @entry
 const mint = (
-  [token_id, quantity, name, description, symbol, ipfsUrl]
-    : [nat, nat, bytes, bytes, bytes, bytes],
+  [token_id, quantity, name, description, symbol, ipfsUrl]: [
+    nat,
+    nat,
+    bytes,
+    bytes,
+    bytes,
+    bytes
+  ],
   s: storage
 ): ret => {
   if (quantity <= (0 as nat)) return failwith("0");
-  if (!Set.mem(Tezos.get_sender(), s.administrators)) return failwith("1");
+  if (! Set.mem(Tezos.get_sender(), s.administrators)) return failwith("1");
   const token_info: map<string, bytes> =
     Map.literal(
       list(
@@ -197,11 +195,11 @@ const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => 
 const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret => {
   //search for the offer
 
-  return match(
-    Map.find_opt([seller, token_id], s.offers),
-    {
-      None: () => failwith("3"),
-      Some: (offer: offer) => {
+  return match(Map.find_opt([seller, token_id], s.offers)) {
+    when (None()):
+      failwith("3")
+    when (Some(offer)):
+      do {
         //check if amount have been paid enough
 
         if (Tezos.get_amount() < offer.price * (1 as mutez)) return failwith(
@@ -221,8 +219,8 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
           MULTIASSET.Ledger.decrease_token_amount_for_user(
             [s.ledger, seller, token_id, quantity]
           );
-        ledger =
-          MULTIASSET.Ledger.increase_token_amount_for_user(
+        ledger
+        = MULTIASSET.Ledger.increase_token_amount_for_user(
             [ledger, Tezos.get_source(), token_id, quantity]
           );
         //update new offer
@@ -241,6 +239,5 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
           }
         ]
       }
-    }
-  )
+  }
 };
