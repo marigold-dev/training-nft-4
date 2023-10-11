@@ -1,5 +1,6 @@
 import { InfoOutlined } from "@mui/icons-material";
 import SellIcon from "@mui/icons-material/Sell";
+import * as api from "@tzkt/sdk-api";
 
 import {
   Box,
@@ -47,15 +48,17 @@ type Offer = {
 };
 
 export default function OffersPage() {
+  api.defaults.baseUrl = "https://api.ghostnet.tzkt.io";
+
   const [selectedTokenId, setSelectedTokenId] = React.useState<number>(0);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(1);
 
-  let [offersTokenIDMap, setOffersTokenIDMap] = React.useState<Map<nat, Offer>>(
-    new Map()
-  );
-  let [ledgerTokenIDMap, setLedgerTokenIDMap] = React.useState<Map<nat, nat>>(
-    new Map()
-  );
+  let [offersTokenIDMap, setOffersTokenIDMap] = React.useState<
+    Map<number, Offer>
+  >(new Map());
+  let [ledgerTokenIDMap, setLedgerTokenIDMap] = React.useState<
+    Map<number, nat>
+  >(new Map());
 
   const {
     nftContrat,
@@ -89,27 +92,38 @@ export default function OffersPage() {
       ledgerTokenIDMap = new Map();
       offersTokenIDMap = new Map();
 
+      const ledgerBigMapId = (
+        storage.ledger as unknown as { id: BigNumber }
+      ).id.toNumber();
+
+      const owner_token_ids = await api.bigMapsGetKeys(ledgerBigMapId, {
+        micheline: "Json",
+        active: true,
+      });
+
       await Promise.all(
-        storage.owner_token_ids.map(async (element) => {
-          if (element[0] === userAddress) {
+        owner_token_ids.map(async (owner_token_idKey) => {
+          const key: { address: string; nat: string } = owner_token_idKey.key;
+
+          if (key.address === userAddress) {
             const ownerBalance = await storage.ledger.get({
               0: userAddress as address,
-              1: element[1],
+              1: BigNumber(key.nat) as nat,
             });
-            if (ownerBalance != BigNumber(0))
-              ledgerTokenIDMap.set(element[1], ownerBalance);
+            if (ownerBalance.toNumber() !== 0)
+              ledgerTokenIDMap.set(Number(key.nat), ownerBalance);
             const ownerOffers = await storage.offers.get({
               0: userAddress as address,
-              1: element[1],
+              1: BigNumber(key.nat) as nat,
             });
-            if (ownerOffers && ownerOffers.quantity != BigNumber(0))
-              offersTokenIDMap.set(element[1], ownerOffers);
+            if (ownerOffers && ownerOffers.quantity.toNumber() !== 0)
+              offersTokenIDMap.set(Number(key.nat), ownerOffers);
 
             console.log(
               "found for " +
-                element[0] +
+                key.address +
                 " on token_id " +
-                element[1] +
+                key.nat +
                 " with balance " +
                 ownerBalance
             );
@@ -220,7 +234,7 @@ export default function OffersPage() {
                             <Typography>
                               {"Description : " +
                                 nftContratTokenMetadataMap.get(
-                                  token_id.toNumber()
+                                  token_id.toString()
                                 )?.description}
                             </Typography>
                           </Box>
@@ -230,7 +244,7 @@ export default function OffersPage() {
                       </Tooltip>
                     }
                     title={
-                      nftContratTokenMetadataMap.get(token_id.toNumber())?.name
+                      nftContratTokenMetadataMap.get(token_id.toString())?.name
                     }
                   />
                   <CardMedia
@@ -238,7 +252,7 @@ export default function OffersPage() {
                     component="img"
                     height="100px"
                     image={nftContratTokenMetadataMap
-                      .get(token_id.toNumber())
+                      .get(token_id.toString())
                       ?.thumbnailUri?.replace(
                         "ipfs://",
                         "https://gateway.pinata.cloud/ipfs/"
@@ -281,7 +295,7 @@ export default function OffersPage() {
                       <form
                         style={{ width: "100%" }}
                         onSubmit={(values) => {
-                          setSelectedTokenId(token_id.toNumber());
+                          setSelectedTokenId(token_id);
                           formik.handleSubmit(values);
                         }}
                       >

@@ -2,11 +2,12 @@ import { NetworkType } from "@airgap/beacon-types";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit } from "@taquito/taquito";
 import { TokenMetadata, tzip12, Tzip12Module } from "@taquito/tzip12";
+import * as api from "@tzkt/sdk-api";
+import { BigNumber } from "bignumber.js";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./App.css";
 import { NftWalletType, Storage } from "./nft.types";
 import Paperbase from "./Paperbase";
-import { nat } from "./type-aliases";
 
 export type TZIP21TokenMetadata = TokenMetadata & {
   artifactUri?: string; //A URI (as defined in the JSON Schema Specification) to the asset.
@@ -29,9 +30,9 @@ export type UserContextType = {
   nftContractAddress: string;
   nftContrat: NftWalletType | null;
   setNftContrat: Dispatch<SetStateAction<NftWalletType | null>>;
-  nftContratTokenMetadataMap: Map<number, TZIP21TokenMetadata>;
+  nftContratTokenMetadataMap: Map<string, TZIP21TokenMetadata>;
   setNftContratTokenMetadataMap: Dispatch<
-    SetStateAction<Map<number, TZIP21TokenMetadata>>
+    SetStateAction<Map<string, TZIP21TokenMetadata>>
   >;
   refreshUserContextOnPageReload: () => Promise<void>;
 };
@@ -40,12 +41,14 @@ export let UserContext = React.createContext<UserContextType | null>(null);
 const nftContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 function App() {
+  api.defaults.baseUrl = "https://api.ghostnet.tzkt.io";
+
   const [storage, setStorage] = useState<Storage | null>(null);
   const [userAddress, setUserAddress] = useState<string>("");
   const [userBalance, setUserBalance] = useState<number>(0);
   const [nftContrat, setNftContrat] = useState<NftWalletType | null>(null);
   const [nftContratTokenMetadataMap, setNftContratTokenMetadataMap] = useState<
-    Map<number, TZIP21TokenMetadata>
+    Map<string, TZIP21TokenMetadata>
   >(new Map());
 
   const [Tezos, _] = useState<TezosToolkit>(
@@ -69,12 +72,23 @@ function App() {
         nftContractAddress
       );
       const storage = (await nftContrat.storage()) as Storage;
+
+      const token_metadataBigMapId = (
+        storage.token_metadata as unknown as { id: BigNumber }
+      ).id.toNumber();
+
+      const token_ids = await api.bigMapsGetKeys(token_metadataBigMapId, {
+        micheline: "Json",
+        active: true,
+      });
       await Promise.all(
-        storage.token_ids.map(async (token_id: nat) => {
+        token_ids.map(async (token_idKey) => {
+          const key: string = token_idKey.key;
+
           let tokenMetadata: TZIP21TokenMetadata = (await c
             .tzip12()
-            .getTokenMetadata(token_id.toNumber())) as TZIP21TokenMetadata;
-          nftContratTokenMetadataMap.set(token_id.toNumber(), tokenMetadata);
+            .getTokenMetadata(Number(key))) as TZIP21TokenMetadata;
+          nftContratTokenMetadataMap.set(key, tokenMetadata);
         })
       );
       setNftContratTokenMetadataMap(new Map(nftContratTokenMetadataMap)); //new Map to force refresh

@@ -4,45 +4,38 @@ import { address, BigMap, bytes, contract, MMap, nat } from './type-aliases';
 
 export type Storage = {
     administrators: Array<address>;
+    offers: MMap<{
+        0: address;
+        1: nat;
+    }, {
+        quantity: nat;
+        price: nat;
+    }>;
     ledger: BigMap<{
         0: address;
         1: nat;
     }, nat>;
     metadata: BigMap<string, bytes>;
-    offers: MMap<{
-        0: address;
-        1: nat;
-    }, {
-        price: nat;
-        quantity: nat;
+    token_metadata: BigMap<nat, {
+        token_id: nat;
+        token_info: MMap<string, bytes>;
     }>;
     operators: BigMap<{
         0: address;
         1: address;
     }, Array<nat>>;
-    owner_token_ids: Array<{
-        0: address;
-        1: nat;
-    }>;
-    token_ids: Array<nat>;
-    token_metadata: BigMap<nat, {
-        token_id: nat;
-        token_info: MMap<string, bytes>;
-    }>;
 };
 
 type Methods = {
-    balance_of: (
-        requests: Array<{
-            owner: address;
-            token_id: nat;
-        }>,
-        callback: contract,
-    ) => Promise<void>;
     buy: (
         _0: nat,
         _1: nat,
         _2: address,
+    ) => Promise<void>;
+    sell: (
+        _0: nat,
+        _1: nat,
+        _2: nat,
     ) => Promise<void>;
     mint: (
         _0: nat,
@@ -52,19 +45,6 @@ type Methods = {
         _4: bytes,
         _5: bytes,
     ) => Promise<void>;
-    sell: (
-        _0: nat,
-        _1: nat,
-        _2: nat,
-    ) => Promise<void>;
-    transfer: (param: Array<{
-            from_: address;
-            txs: Array<{
-                to_: address;
-                token_id: nat;
-                amount: nat;
-            }>;
-        }>) => Promise<void>;
     add_operator: (
         owner: address,
         operator: address,
@@ -75,20 +55,33 @@ type Methods = {
         operator: address,
         token_id: nat,
     ) => Promise<void>;
-};
-
-type MethodsObject = {
-    balance_of: (params: {
+    balance_of: (
         requests: Array<{
             owner: address;
             token_id: nat;
         }>,
         callback: contract,
-    }) => Promise<void>;
+    ) => Promise<void>;
+    transfer: (param: Array<{
+            from_: address;
+            txs: Array<{
+                to_: address;
+                token_id: nat;
+                amount: nat;
+            }>;
+        }>) => Promise<void>;
+};
+
+type MethodsObject = {
     buy: (params: {
         0: nat,
         1: nat,
         2: address,
+    }) => Promise<void>;
+    sell: (params: {
+        0: nat,
+        1: nat,
+        2: nat,
     }) => Promise<void>;
     mint: (params: {
         0: nat,
@@ -98,19 +91,6 @@ type MethodsObject = {
         4: bytes,
         5: bytes,
     }) => Promise<void>;
-    sell: (params: {
-        0: nat,
-        1: nat,
-        2: nat,
-    }) => Promise<void>;
-    transfer: (param: Array<{
-            from_: address;
-            txs: Array<{
-                to_: address;
-                token_id: nat;
-                amount: nat;
-            }>;
-        }>) => Promise<void>;
     add_operator: (params: {
         owner: address,
         operator: address,
@@ -121,6 +101,21 @@ type MethodsObject = {
         operator: address,
         token_id: nat,
     }) => Promise<void>;
+    balance_of: (params: {
+        requests: Array<{
+            owner: address;
+            token_id: nat;
+        }>,
+        callback: contract,
+    }) => Promise<void>;
+    transfer: (param: Array<{
+            from_: address;
+            txs: Array<{
+                to_: address;
+                token_id: nat;
+                amount: nat;
+            }>;
+        }>) => Promise<void>;
 };
 
 type contractTypes = { methods: Methods, methodsObject: MethodsObject, storage: Storage, code: { __type: 'NftCode', protocol: string, code: object[] } };

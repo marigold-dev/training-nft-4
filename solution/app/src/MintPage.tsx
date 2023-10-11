@@ -91,11 +91,11 @@ export default function MintPage() {
 
   useEffect(() => {
     (async () => {
-      if (storage && storage.token_ids.length > 0) {
-        formik.setFieldValue("token_id", storage?.token_ids.length);
+      if (nftContratTokenMetadataMap && nftContratTokenMetadataMap.size > 0) {
+        formik.setFieldValue("token_id", nftContratTokenMetadataMap.size);
       }
     })();
-  }, [storage?.token_ids]);
+  }, [nftContratTokenMetadataMap?.size]);
 
   const mint = async (
     newTokenDefinition: TZIP21TokenMetadata & { quantity: number }
