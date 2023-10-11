@@ -1,4 +1,5 @@
-#import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
+#import "@ligo/fa/lib/fa2/asset/multi_asset.impl.jsligo" "FA2Impl"
+
 /* ERROR MAP FOR UI DISPLAY or TESTS
     const errorMap : map<string,string> = Map.literal(list([
       ["0", "Enter a positive and not null amount"],
@@ -11,39 +12,31 @@
     ]));
 */
 
-type offer = {
-  quantity: nat,
-  price: nat
-};
+export type offer = { quantity: nat, price: nat };
 
-type storage = {
+export type storage = {
   administrators: set<address>,
   offers: map<[address, nat], offer>, //user sells an offer for a token_id
-  ledger: MULTIASSET.Ledger.t,
-  metadata: MULTIASSET.Metadata.t,
-  token_metadata: MULTIASSET.TokenMetadata.t,
-  operators: MULTIASSET.Operators.t,
-  owner_token_ids: set<[MULTIASSET.owner, MULTIASSET.token_id]>,
-  token_ids: set<MULTIASSET.token_id>
+
+  ledger: FA2Impl.Datatypes.ledger,
+  metadata: FA2Impl.TZIP16.metadata,
+  token_metadata: FA2Impl.TZIP12.tokenMetadata,
+  operators: FA2Impl.Datatypes.operators,
 };
 
 type ret = [list<operation>, storage];
 
 @entry
-const transfer = (p: MULTIASSET.transfer, s: storage): ret => {
-  const ret2: [list<operation>, MULTIASSET.storage] =
-    MULTIASSET.transfer(
-      [
-        p,
-        {
-          ledger: s.ledger,
-          metadata: s.metadata,
-          token_metadata: s.token_metadata,
-          operators: s.operators,
-          owner_token_ids: s.owner_token_ids,
-          token_ids: s.token_ids
-        }
-      ]
+const transfer = (p: FA2Impl.TZIP12.transfer, s: storage): ret => {
+  const ret2: [list<operation>, FA2Impl.MultiAsset.storage] =
+    FA2Impl.MultiAsset.transfer(
+      p,
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        token_metadata: s.token_metadata,
+        operators: s.operators,
+      }
     );
   return [
     ret2[0],
@@ -53,27 +46,21 @@ const transfer = (p: MULTIASSET.transfer, s: storage): ret => {
       metadata: ret2[1].metadata,
       token_metadata: ret2[1].token_metadata,
       operators: ret2[1].operators,
-      owner_token_ids: ret2[1].owner_token_ids,
-      token_ids: ret2[1].token_ids
     }
   ]
 };
 
 @entry
-const balance_of = (p: MULTIASSET.balance_of, s: storage): ret => {
-  const ret2: [list<operation>, MULTIASSET.storage] =
-    MULTIASSET.balance_of(
-      [
-        p,
-        {
-          ledger: s.ledger,
-          metadata: s.metadata,
-          token_metadata: s.token_metadata,
-          operators: s.operators,
-          owner_token_ids: s.owner_token_ids,
-          token_ids: s.token_ids
-        }
-      ]
+const balance_of = (p: FA2Impl.TZIP12.balance_of, s: storage): ret => {
+  const ret2: [list<operation>, FA2Impl.MultiAsset.storage] =
+    FA2Impl.MultiAsset.balance_of(
+      p,
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        token_metadata: s.token_metadata,
+        operators: s.operators,
+      }
     );
   return [
     ret2[0],
@@ -83,27 +70,21 @@ const balance_of = (p: MULTIASSET.balance_of, s: storage): ret => {
       metadata: ret2[1].metadata,
       token_metadata: ret2[1].token_metadata,
       operators: ret2[1].operators,
-      owner_token_ids: ret2[1].owner_token_ids,
-      token_ids: ret2[1].token_ids
     }
   ]
 };
 
 @entry
-const update_operators = (p: MULTIASSET.update_operators, s: storage): ret => {
-  const ret2: [list<operation>, MULTIASSET.storage] =
-    MULTIASSET.update_ops(
-      [
-        p,
-        {
-          ledger: s.ledger,
-          metadata: s.metadata,
-          token_metadata: s.token_metadata,
-          operators: s.operators,
-          owner_token_ids: s.owner_token_ids,
-          token_ids: s.token_ids
-        }
-      ]
+const update_operators = (p: FA2Impl.TZIP12.update_operators, s: storage): ret => {
+  const ret2: [list<operation>, FA2Impl.MultiAsset.storage] =
+    FA2Impl.MultiAsset.update_operators(
+      p,
+      {
+        ledger: s.ledger,
+        metadata: s.metadata,
+        token_metadata: s.token_metadata,
+        operators: s.operators,
+      }
     );
   return [
     ret2[0],
@@ -113,20 +94,24 @@ const update_operators = (p: MULTIASSET.update_operators, s: storage): ret => {
       metadata: ret2[1].metadata,
       token_metadata: ret2[1].token_metadata,
       operators: ret2[1].operators,
-      owner_token_ids: ret2[1].owner_token_ids,
-      token_ids: ret2[1].token_ids
     }
   ]
 };
 
 @entry
 const mint = (
-  [token_id, quantity, name, description, symbol, ipfsUrl]
-    : [nat, nat, bytes, bytes, bytes, bytes],
+  [token_id, quantity, name, description, symbol, ipfsUrl]: [
+    nat,
+    nat,
+    bytes,
+    bytes,
+    bytes,
+    bytes
+  ],
   s: storage
 ): ret => {
   if (quantity <= (0 as nat)) return failwith("0");
-  if (!Set.mem(Tezos.get_sender(), s.administrators)) return failwith("1");
+  if (! Set.mem(Tezos.get_sender(), s.administrators)) return failwith("1");
   const token_info: map<string, bytes> =
     Map.literal(
       list(
@@ -148,18 +133,13 @@ const mint = (
         [Tezos.get_sender(), token_id],
         quantity as nat,
         s.ledger
-      ) as MULTIASSET.Ledger.t,
+      ) as FA2Impl.Datatypes.ledger,
       token_metadata: Big_map.add(
         token_id,
         { token_id: token_id, token_info: token_info },
         s.token_metadata
       ),
-      operators: Big_map.empty as MULTIASSET.Operators.t,
-      owner_token_ids: Set.add(
-        [Tezos.get_sender(), token_id],
-        s.owner_token_ids
-      ),
-      token_ids: Set.add(token_id, s.token_ids)
+      operators: Big_map.empty as FA2Impl.Datatypes.operators
     }
   ]
 };
@@ -169,12 +149,12 @@ const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => 
   //check balance of seller
 
   const sellerBalance =
-    MULTIASSET.Ledger.get_for_user([s.ledger, Tezos.get_source(), token_id]);
+    FA2Impl.Sidecar.get_for_user([s.ledger, Tezos.get_source(), token_id]);
   if (quantity > sellerBalance) return failwith("2");
   //need to allow the contract itself to be an operator on behalf of the seller
 
   const newOperators =
-    MULTIASSET.Operators.add_operator(
+    FA2Impl.Sidecar.add_operator(
       [s.operators, Tezos.get_source(), Tezos.get_self_address(), token_id]
     );
   //DECISION CHOICE: if offer already exists, we just override it
@@ -197,11 +177,11 @@ const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => 
 const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret => {
   //search for the offer
 
-  return match(
-    Map.find_opt([seller, token_id], s.offers),
-    {
-      None: () => failwith("3"),
-      Some: (offer: offer) => {
+  return match(Map.find_opt([seller, token_id], s.offers)) {
+    when (None()):
+      failwith("3")
+    when (Some(offer)):
+      do {
         //check if amount have been paid enough
 
         if (Tezos.get_amount() < offer.price * (1 as mutez)) return failwith(
@@ -218,11 +198,11 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
         //transfer tokens from seller to buyer
 
         let ledger =
-          MULTIASSET.Ledger.decrease_token_amount_for_user(
+          FA2Impl.Sidecar.decrease_token_amount_for_user(
             [s.ledger, seller, token_id, quantity]
           );
-        ledger =
-          MULTIASSET.Ledger.increase_token_amount_for_user(
+        ledger
+        = FA2Impl.Sidecar.increase_token_amount_for_user(
             [ledger, Tezos.get_source(), token_id, quantity]
           );
         //update new offer
@@ -233,14 +213,9 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
           {
             ...s,
             offers: Map.update([seller, token_id], Some(newOffer), s.offers),
-            ledger: ledger,
-            owner_token_ids: Set.add(
-              [Tezos.get_source(), token_id],
-              s.owner_token_ids
-            )
+            ledger: ledger
           }
         ]
       }
-    }
-  )
+  }
 };

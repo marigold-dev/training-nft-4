@@ -1,20 +1,19 @@
 #import "nft.jsligo" "Contract"
-#import "@ligo/fa/lib/fa2/asset/multi_asset.jsligo" "MULTIASSET"
-const default_storage =
-    {
-        administrators: Set.literal(
-            list(["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address])
-        ) as set<address>,
-        offers: Map.empty as map<[address, nat], Contract.offer>,
-        ledger: Big_map.empty as MULTIASSET.Ledger.t,
-        metadata: Big_map.literal(
-            list(
+
+const default_storage: Contract.storage = {
+    administrators: Set.literal(
+        list(["tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address])
+    ) as set<address>,
+    offers: Map.empty as map<[address, nat], Contract.offer>,
+    ledger: Big_map.empty as Contract.FA2Impl.MultiAsset.ledger,
+    metadata: Big_map.literal(
+        list(
+            [
+                ["", bytes `tezos-storage:data`],
                 [
-                    ["", bytes `tezos-storage:data`],
-                    [
-                        "data",
-                        bytes
-                        `{
+                    "data",
+                    bytes
+                    `{
       "name":"FA2 NFT Marketplace",
       "description":"Example of FA2 implementation",
       "version":"0.0.1",
@@ -28,13 +27,10 @@ const default_storage =
       "errors": [],
       "views": []
       }`
-                    ]
                 ]
-            )
-        ) as MULTIASSET.Metadata.t,
-        token_metadata: Big_map.empty as MULTIASSET.TokenMetadata.t,
-        operators: Big_map.empty as MULTIASSET.Operators.t,
-        owner_token_ids: Set.empty as
-            set<[MULTIASSET.owner, MULTIASSET.token_id]>,
-        token_ids: Set.empty as set<MULTIASSET.token_id>
-    };
+            ]
+        )
+    ) as Contract.FA2Impl.TZIP16.metadata,
+    token_metadata: Big_map.empty as Contract.FA2Impl.TZIP12.tokenMetadata,
+    operators: Big_map.empty as Contract.FA2Impl.MultiAsset.operators,
+};
