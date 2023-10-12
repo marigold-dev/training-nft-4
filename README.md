@@ -6,7 +6,7 @@ Training n°4 for NFT marketplace
 
 ![https://france-vins.eu/wp-content/uploads/2018/10/les-meilleures-caves-%C3%A0-vin-image.jpg](https://france-vins.eu/wp-content/uploads/2018/10/les-meilleures-caves-%C3%A0-vin-image.jpg)
 
-We finish by using multi asset template.
+Here is the multi asset template :
 
 - you have an unlimited number of NFT collections
 - you have an unlimited quantity of items in each collection
@@ -36,7 +36,7 @@ It means you will change the namespace from `SingleAsset` to `MultiAsset` everyw
 
 You will re-introduce the `token_id` as there are several collections now.
 
-We can remove `totalSupply` and add two extra key sets `owner_token_ids` and `token_ids`
+Remove `totalSupply` and add two extra key sets `owner_token_ids` and `token_ids`
 
 Change the `storage` definition
 
@@ -249,7 +249,7 @@ taq deploy nft.tz -e "testing"
 └──────────┴──────────────────────────────────────┴───────┴──────────────────┴────────────────────────────────┘
 ```
 
-**Hooray! We have finished the smart contract _(backend)_**
+**The smart contract _(backend)_ is finished**
 
 ## :performing_arts: NFT Marketplace front
 
@@ -264,7 +264,7 @@ yarn dev
 
 ## Update in `App.tsx`
 
-We forget about `token_id == 0` and fetch back all tokens.
+Forget about `token_id == 0` and fetch back all tokens.
 Replace the function `refreshUserContextOnPageReload` with the following content
 
 ```typescript
