@@ -1,8 +1,10 @@
-## :round_pushpin: [See Github version and full code here](https://github.com/marigold-dev/training-nft-4)
+---
+id: build-an-nft-marketplace
+title: NFT Marketplace Part 4
+lastUpdated: 11th October 2023
+---
 
-# training-nft-4
-
-Training n°4 for NFT marketplace
+## Introduction
 
 ![https://france-vins.eu/wp-content/uploads/2018/10/les-meilleures-caves-%C3%A0-vin-image.jpg](https://france-vins.eu/wp-content/uploads/2018/10/les-meilleures-caves-%C3%A0-vin-image.jpg)
 
@@ -32,9 +34,9 @@ Point to the new template changing the first import line of `nft.jsligo` file to
 #import "@ligo/fa/lib/fa2/asset/multi_asset.impl.jsligo" "FA2Impl"
 ```
 
-It means you will change the namespace from `SingleAsset` to `MultiAsset` everywhere _(like this you are sure to use the correct library)_
+It means you need to change the namespace from `SingleAsset` to `MultiAsset` everywhere _(like this you are sure to use the correct library)_
 
-You will re-introduce the `token_id` as there are several collections now.
+You have to re-introduce the `token_id` as there are several collections now.
 
 Remove `totalSupply` and add two extra key sets `owner_token_ids` and `token_ids`
 
@@ -251,7 +253,7 @@ taq deploy nft.tz -e "testing"
 
 **The smart contract _(backend)_ is finished**
 
-## :performing_arts: NFT Marketplace front
+## NFT Marketplace front
 
 Generate Typescript classes and go to the frontend to run the server
 
@@ -1411,25 +1413,25 @@ export default function WineCataloguePage() {
 
 ## Let's play
 
-- Connect with your wallet and choose `alice` account _(or one of the administrators you set on the smart contract earlier)_. You are redirected to the Administration/mint page as there is no NFT minted yet
+- Connect with your wallet and choose **alice** account _(or one of the administrators you set on the smart contract earlier)_. You are redirected to the Administration/mint page as there is no NFT minted yet
 - Create an asset, for example :
   - `name`: Saint Emilion - Franc la Rose
   - `symbol`: SEMIL
   - `description`: Grand cru 2007
   - `quantity`: 1000
-- Click on `Upload an image` and select a bottle picture on your computer
+- Click on **Upload an image** and select a bottle picture on your computer
 - Click on the Mint button
 
-![minting.png](./doc/minting.png)
+![minting.png](./images/minting.png)
 
-Your picture will be pushed to IPFS and will be displayed, then your wallet will ask you to sign the `mint` operation.
+Your picture is pushed to IPFS and is displayed, then your wallet asks you to sign the `mint` operation.
 
 - Confirm operation
-- Wait less than 1 minute to get the confirmation notification, the page will be automatically refreshed
+- Wait less than 1 minute to get the confirmation notification, the page is automatically refreshed
 
-![minted.png](./doc/minted.png)
+![minted_part4.png](/images/minted_part4.png)
 
-Now you can see the `Trading` menu and the `Bottle offers` sub-menu
+Now you can see the **Trading** menu and the **Bottle offers** sub-menu
 
 Click on the sub-menu entry
 
@@ -1437,25 +1439,25 @@ You are the owner of this bottle so you can create an offer on it
 
 - Enter a quantity
 - Enter a price offer
-- Click on `SELL` button
+- Click on **SELL** button
 - Wait a bit for the confirmation, then once automatically refreshed you have an offer attached to your NFT!
 
-![sell.png](./doc/sell.png)
+![sell_part4.png](/images/sell_part4.png)
 
 For buying,
 
 - Disconnect from your user and connect with another account _(who has enough XTZ to buy at least 1 bottle)_
 - The buyer will see that Alice is selling some bottles from the unique collection
-- Buy some bottles while clicking on the `BUY` button
+- Buy some bottles while clicking on the **BUY** button
 - Wait for the confirmation, then the offer is updated on the market _(depending on how many bottles you bought)_
-- Click on the `bottle offers` submenu
+- Click on the **bottle offers** submenu
 - You are now the owner of some bottles, you can resell a part of it at your own price, etc ...
 
-![buy.png](./doc/buy.png)
+![buy_part4.png](/images/buy_part4.png)
 
 To add more collections, go to the Mint page and repeat the process.
 
-# :palm_tree: Conclusion :sun_with_face:
+## Conclusion
 
 You are able to use any NFT template from the Ligo library.
 
