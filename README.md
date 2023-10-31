@@ -52,10 +52,10 @@ export type storage = {
   administrators: set<address>,
   offers: map<[address, nat], offer>, //user sells an offer for a token_id
 
-  ledger: FA2Impl.Datatypes.ledger,
+  ledger: FA2Impl.MultiAsset.ledger,
   metadata: FA2Impl.TZIP16.metadata,
   token_metadata: FA2Impl.TZIP12.tokenMetadata,
-  operators: FA2Impl.Datatypes.operators,
+  operators: FA2Impl.MultiAsset.operators,
 };
 ```
 
@@ -99,13 +99,13 @@ const mint = (
         [Tezos.get_sender(), token_id],
         quantity as nat,
         s.ledger
-      ) as FA2Impl.Datatypes.ledger,
+      ) as FA2Impl.MultiAsset.ledger,
       token_metadata: Big_map.add(
         token_id,
         { token_id: token_id, token_info: token_info },
         s.token_metadata
       ),
-      operators: Big_map.empty as FA2Impl.Datatypes.operators
+      operators: Big_map.empty as FA2Impl.MultiAsset.operators
     }
   ]
 };
@@ -119,12 +119,12 @@ const sell = ([token_id, quantity, price]: [nat, nat, nat], s: storage): ret => 
   //check balance of seller
 
   const sellerBalance =
-    FA2Impl.Sidecar.get_for_user([s.ledger, Tezos.get_source(), token_id]);
+    FA2Impl.MultiAsset.get_for_user([s.ledger, Tezos.get_source(), token_id]);
   if (quantity > sellerBalance) return failwith("2");
   //need to allow the contract itself to be an operator on behalf of the seller
 
   const newOperators =
-    FA2Impl.Sidecar.add_operator(
+    FA2Impl.MultiAsset.add_operator(
       [s.operators, Tezos.get_source(), Tezos.get_self_address(), token_id]
     );
   //DECISION CHOICE: if offer already exists, we just override it
@@ -172,11 +172,11 @@ const buy = ([token_id, quantity, seller]: [nat, nat, address], s: storage): ret
         //transfer tokens from seller to buyer
 
         let ledger =
-          FA2Impl.Sidecar.decrease_token_amount_for_user(
+          FA2Impl.MultiAsset.decrease_token_amount_for_user(
             [s.ledger, seller, token_id, quantity]
           );
         ledger
-        = FA2Impl.Sidecar.increase_token_amount_for_user(
+        = FA2Impl.MultiAsset.increase_token_amount_for_user(
             [ledger, Tezos.get_source(), token_id, quantity]
           );
         //update new offer
@@ -239,7 +239,7 @@ const default_storage: Contract.storage = {
 Compile again and deploy to ghostnet
 
 ```bash
-TAQ_LIGO_IMAGE=ligolang/ligo:1.0.0 taq compile nft.jsligo
+TAQ_LIGO_IMAGE=ligolang/ligo:1.1.0 taq compile nft.jsligo
 taq deploy nft.tz -e "testing"
 ```
 
