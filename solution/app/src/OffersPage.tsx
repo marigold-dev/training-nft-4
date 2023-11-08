@@ -338,7 +338,10 @@ export default function OffersPage() {
                               formik.touched.quantity && formik.errors.quantity
                             }
                             InputProps={{
-                              inputProps: { min: 0, max: balance.toNumber() },
+                              inputProps: {
+                                min: 0,
+                                max: balance.toNumber(),
+                              },
                               endAdornment: (
                                 <InputAdornment position="end">
                                   <Button

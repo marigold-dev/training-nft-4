@@ -3,12 +3,10 @@ import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit } from "@taquito/taquito";
 import { TokenMetadata, tzip12, Tzip12Module } from "@taquito/tzip12";
 import * as api from "@tzkt/sdk-api";
-import { BigNumber } from "bignumber.js";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./App.css";
 import { NftWalletType, Storage } from "./nft.types";
 import Paperbase from "./Paperbase";
-
 export type TZIP21TokenMetadata = TokenMetadata & {
   artifactUri?: string; //A URI (as defined in the JSON Schema Specification) to the asset.
   displayUri?: string; //A URI (as defined in the JSON Schema Specification) to an image of the asset.
