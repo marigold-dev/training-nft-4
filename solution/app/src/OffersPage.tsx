@@ -112,7 +112,7 @@ export default function OffersPage() {
             });
             if (ownerBalance.toNumber() !== 0)
               ledgerTokenIDMap.set(Number(key.nat), ownerBalance);
-            const ownerOffers = await storage.offers.get({
+            const ownerOffers = await storage.extension.offers.get({
               0: userAddress as address,
               1: BigNumber(key.nat) as nat,
             });

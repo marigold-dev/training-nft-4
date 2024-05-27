@@ -117,14 +117,14 @@ export default function WineCataloguePage() {
         Wine catalogue
       </Typography>
 
-      {storage?.offers && storage?.offers.size != 0 ? (
+      {storage?.extension.offers && storage?.extension.offers.size != 0 ? (
         <Fragment>
           <Pagination
             page={currentPageIndex}
             onChange={(_, value) => setCurrentPageIndex(value)}
             count={Math.ceil(
-              Array.from(storage?.offers.entries()).filter(([_, offer]) =>
-                offer.quantity.isGreaterThan(0)
+              Array.from(storage?.extension.offers.entries()).filter(
+                ([_, offer]) => offer.quantity.isGreaterThan(0)
               ).length / itemPerPage
             )}
             showFirstButton
@@ -133,7 +133,7 @@ export default function WineCataloguePage() {
           <ImageList
             cols={isDesktop ? itemPerPage / 2 : isTablet ? itemPerPage / 3 : 1}
           >
-            {Array.from(storage?.offers.entries())
+            {Array.from(storage?.extension.offers.entries())
               .filter(([_, offer]) => offer.quantity.isGreaterThan(0))
               .filter((_, index) =>
                 index >= currentPageIndex * itemPerPage - itemPerPage &&
